@@ -4,8 +4,8 @@ import re
 import os
 botGrid = []
 botGridQueue = []
-playerGridOffence = []
-playerGridDefence = []
+playerGridOffense = []
+playerGridDefense = []
 playerShips = []
 botShips = []
 directionDict={0:'u',1:'d',2:'l',3:'r'}
@@ -18,26 +18,26 @@ def cls(title=""):
 def attackCell(attackX,attackY,bot=False):
     if(attackX in range(0,10) and attackY in range(0,10)):
         if(bot):
-            if(playerGridDefence[attackX][attackY]=='X'):
+            if(playerGridDefense[attackX][attackY]=='X'):
                 return("retry")
-            if(playerGridDefence[attackX][attackY]=='#'):
-                playerGridDefence[attackX][attackY]='X'
+            if(playerGridDefense[attackX][attackY]=='#'):
+                playerGridDefense[attackX][attackY]='X'
                 return("hit")
-            if(playerGridDefence[attackX][attackY]=='-'):
-                playerGridDefence[attackX][attackY]='O'
+            if(playerGridDefense[attackX][attackY]=='-'):
+                playerGridDefense[attackX][attackY]='O'
                 return("miss")
-            if(playerGridDefence[attackX][attackY]=='O'):
+            if(playerGridDefense[attackX][attackY]=='O'):
                 return("retry")
         else:
-            if(playerGridOffence[attackX][attackY]=='X'):
+            if(playerGridOffense[attackX][attackY]=='X'):
                 return("retry")
             if(botGrid[attackX][attackY]==1):
-                playerGridOffence[attackX][attackY]='X'
+                playerGridOffense[attackX][attackY]='X'
                 return("hit")
-            if(playerGridOffence[attackX][attackY] == '-'):
-                playerGridOffence[attackX][attackY]='O'
+            if(playerGridOffense[attackX][attackY] == '-'):
+                playerGridOffense[attackX][attackY]='O'
                 return("miss")
-            if(playerGridOffence[attackX][attackY]=='O'):
+            if(playerGridOffense[attackX][attackY]=='O'):
                 return("retry")
     else:
         return("out")
@@ -141,25 +141,25 @@ def addShip(shipX,shipY,direction,length,gridVar,bot=False):
 #'-'=Empty '#'=Ship 'X'=Hit 'O'=Miss
 cls("Starting... ")
 for i in range(0,10):
-    playerGridOffence.append(['-','-','-','-','-','-','-','-','-','-'])
-    playerGridDefence.append(['-','-','-','-','-','-','-','-','-','-'])
+    playerGridOffense.append(['-','-','-','-','-','-','-','-','-','-'])
+    playerGridDefense.append(['-','-','-','-','-','-','-','-','-','-'])
     botGrid.append([0,0,0,0,0,0,0,0,0,0])
     botGridQueue.append([0,0,0,0,0,0,0,0,0,0])
 cls("Placing ships... ")
-while(searchGrid(playerGridDefence, '#')<17):
-    if(searchGrid(playerGridDefence, '#')==0):
+while(searchGrid(playerGridDefense, '#')<17):
+    if(searchGrid(playerGridDefense, '#')==0):
         print("Place your Patrol Boat (2 Squares Long)")
         shipLength=2;
-    if(searchGrid(playerGridDefence, '#')==2):
+    if(searchGrid(playerGridDefense, '#')==2):
         print("Place your Cruiser (3 Squares Long)")
         shipLength=3;
-    if(searchGrid(playerGridDefence, '#')==5):
+    if(searchGrid(playerGridDefense, '#')==5):
         print("Place your Submarine (3 Squares Long)")
         shipLength=3
-    if(searchGrid(playerGridDefence, '#')==8):
+    if(searchGrid(playerGridDefense, '#')==8):
         print("Place your Battleship (4 Squares Long)")
         shipLength=4
-    if(searchGrid(playerGridDefence, '#')==12):
+    if(searchGrid(playerGridDefense, '#')==12):
         print("Place your Aircraft Carrier (5 Squares Long")
         shipLength=5
     inputX = input("X coordinate from 1-10\n")
@@ -169,7 +169,7 @@ while(searchGrid(playerGridDefence, '#')<17):
     print(shipX)
     print(shipY)
     shipDirection = input("Is it facing up, down, left, or right?\n").lower()[0:1]
-    errormessage = addShip(int(shipX)-1, int(shipY)-1, shipDirection, shipLength, playerGridDefence)
+    errormessage = addShip(int(shipX)-1, int(shipY)-1, shipDirection, shipLength, playerGridDefense)
     cls("Placeing ships... ")
     if(errormessage=="good"):
         print("Ship placed. ")
@@ -181,9 +181,9 @@ while(searchGrid(playerGridDefence, '#')<17):
         if(errormessage=="direction"):
             print("Invalid direction. ")
         print("Failed to place ship. ")
-    printGrid(playerGridDefence)
+    printGrid(playerGridDefense)
 cls("Your ships:")
-printGrid(playerGridDefence)
+printGrid(playerGridDefense)
 sleep(3)
 print("The bot is chosing ship locations. ")
 while(searchGrid(botGrid, 1)<17):
@@ -207,9 +207,9 @@ game=True
 turnCount=1
 while(game):
     if(turnCount%2>0):
-        if(searchGrid(playerGridOffence, '-')<100):
+        if(searchGrid(playerGridOffense, '-')<100):
             print("Your hits and misses: ")
-        printGrid(playerGridOffence)
+        printGrid(playerGridOffense)
         print("It is your turn! Choose the cell to attack! ")
         attackX=eval(input("X coordinate from 1-10\n"))-1
         attackY=eval(input("Y coordinate from 1-10\n"))-1
@@ -242,7 +242,7 @@ while(game):
                                 sleep(2)
                             queueBreak=True
                             break
-            if(searchGrid(botGrid, 1)==searchGrid(playerGridOffence, 'X')):
+            if(searchGrid(botGrid, 1)==searchGrid(playerGridOffense, 'X')):
                 print("You won congratulations! ")
                 game=False
             turnCount+=1
@@ -268,7 +268,7 @@ while(game):
         attackY+=1
         if(errormessage!="retry"):
             print("Your ships and shots the bot has fired: ")
-            printGrid(playerGridDefence)
+            printGrid(playerGridDefense)
             print("Bot:",attackX,attackY)
             attackX-=1
             attackY-=1
@@ -297,17 +297,17 @@ while(game):
                                     print("Your aircraft carrier has sunk!")
                             queueBreak=True
                             break
-            if(searchGrid(playerGridDefence, '#')==0):
+            if(searchGrid(playerGridDefense, '#')==0):
                 print("The bot won. Better luck next time!")
                 game=False
             turnCount+=1
-            if(attackX-1>=0 and playerGridDefence[attackX-1][attackY] != 'X' and playerGridDefence[attackX-1][attackY] != 'O'):
+            if(attackX-1>=0 and playerGridDefense[attackX-1][attackY] != 'X' and playerGridDefense[attackX-1][attackY] != 'O'):
                 botGridQueue[attackX-1][attackY]=1
-            if(attackY-1>=0 and playerGridDefence[attackX][attackY-1] != 'X' and playerGridDefence[attackX][attackY-1] != 'O'):
+            if(attackY-1>=0 and playerGridDefense[attackX][attackY-1] != 'X' and playerGridDefense[attackX][attackY-1] != 'O'):
                 botGridQueue[attackX][attackY-1]=1
-            if(attackX+1<10 and playerGridDefence[attackX+1][attackY] != 'X' and playerGridDefence[attackX+1][attackY] != 'O'):
+            if(attackX+1<10 and playerGridDefense[attackX+1][attackY] != 'X' and playerGridDefense[attackX+1][attackY] != 'O'):
                 botGridQueue[attackX+1][attackY]=1
-            if(attackY+1<10 and playerGridDefence[attackX][attackY+1] != 'X' and playerGridDefence[attackX][attackY+1] != 'O'):
+            if(attackY+1<10 and playerGridDefense[attackX][attackY+1] != 'X' and playerGridDefense[attackX][attackY+1] != 'O'):
                 botGridQueue[attackX][attackY+1]=1
         if(errormessage=="miss"):
             print("The bot missed! ")
