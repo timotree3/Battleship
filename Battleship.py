@@ -8,42 +8,34 @@ def createGrid(size,grid):
         for x in range(0,size):
             grid[y].append(0)
 def cls(title=""):
-    os.system('cls')
+    if os.name == "nt":
+        clearCommand = "cls"
+    elif os.name == "posix":
+        clearCommand = "clear"
+    else:
+        return "failed"
+    os.system(clearCommand)
     print("Battleship!")
     if(len(title.strip())>0):
         print(title)
 def attackCell(attackX,attackY,player):
     if(player==1):
-        grid1=offenseGrid1
-        grid2=defenseGrid2
+        gridOffense=offenseGrid1
+        gridDefense=defenseGrid2
     elif(player==2):
-        grid1=defenseGrid1
-    if(attackX in range(0,10) and attackY in range(0,10)):
-        if(bot):
-            if(defenseGrid1[attackX][attackY]==hit):
-                return("retry")
-            if(defenseGrid1[attackX][attackY]==ship):
-                defenseGrid1[attackX][attackY]=hit
-                return("hit")
-            if(defenseGrid1[attackX][attackY]==empty):
-                defenseGrid1[attackX][attackY]=miss
-                return("miss")
-            if(defenseGrid1[attackX][attackY]==miss):
-                return("retry")
-        else:
-            if(offenseGrid1[attackX][attackY]==hit):
-                return("retry")
-            if(defenseGrid2[attackX][attackY]==ship):
-                offenseGrid1[attackX][attackY]=hit
-                return("hit")
-            if(offenseGrid1[attackX][attackY] == empty):
-                offenseGrid1[attackX][attackY]=miss
-                return("miss")
-            if(offenseGrid1[attackX][attackY]==miss):
-                return("retry")
+        gridOffense=offenseGrid2
+        gridDefense=defenseGrid1
     else:
-        return("out")
-def searchGrid(gridVar,value):
+        return("invalid player")
+    if(gridDefense[attackX][attackY]==empty):
+        gridDefense[attackX][attackY]=miss
+        return("miss")
+    elif(gridDefense[attackX][attackY]==ship):
+        gridDefense[attackX][attackY]=hit
+        return("hit")
+    else:
+        return("has been attacked")
+def gridCount(gridVar,value):
     count=0
     for x in range(0, len(gridVar)):
         for y in range(0, len(gridVar[x])):
@@ -57,7 +49,7 @@ def printGrid(gridVar):
         print()
 def addShip(shipX,shipY,direction,length,gridVar,bot=False):
     filler=1
-    beforeCount = searchGrid(gridVar, filler)
+    beforeCount = gridCount(gridVar, filler)
     if(direction=="u"):
         if(shipY-length>=-1):
             for y in range(shipY, shipY-length,-1):
@@ -134,7 +126,7 @@ def addShip(shipX,shipY,direction,length,gridVar,bot=False):
             return "out"
     else:
         rFail=True
-    if(searchGrid(gridVar, filler) == beforeCount):
+    if(gridCount(gridVar, filler) == beforeCount):
         return "direction"
     return "good"
 directionDict = {0:'u',1:'d',2:'l',3:'r'}
@@ -144,32 +136,35 @@ miss = 1    #Constant
 ship = 2    #Constant
 hit = 3     #Constant
 gridSize = 10
+activeTitle = "Starting..."
 queueGrid1 = []
 offenseGrid1 = []
+offenseGrid2 = []
 defenseGrid1 = []
 defenseGrid2 = []
 shipsGrid1 = []
 shipsGrid2 = []
 createGrid(gridSize,offenseGrid1)
+createGrid(gridSize,offenseGrid2)
 createGrid(gridSize,defenseGrid1)
 createGrid(gridSize,defenseGrid2)
 createGrid(gridSize,queueGrid1)
 #0=Empty 1=Ship 2=Hit 3=Miss
 cls("Placing ships... ")
-while(searchGrid(defenseGrid1, 1)<17):
-    if(searchGrid(defenseGrid1, 1)==0):
+while(gridCount(defenseGrid1, 1)<17):
+    if(gridCount(defenseGrid1, 1)==0):
         print("Place your Patrol Boat (2 Squares Long)")
         shipLength=2;
-    if(searchGrid(defenseGrid1, 1)==2):
+    if(gridCount(defenseGrid1, 1)==2):
         print("Place your Cruiser (3 Squares Long)")
         shipLength=3;
-    if(searchGrid(defenseGrid1, 1)==5):
+    if(gridCount(defenseGrid1, 1)==5):
         print("Place your Submarine (3 Squares Long)")
         shipLength=3
-    if(searchGrid(defenseGrid1, 1)==8):
+    if(gridCount(defenseGrid1, 1)==8):
         print("Place your Battleship (4 Squares Long)")
         shipLength=4
-    if(searchGrid(defenseGrid1, 1)==12):
+    if(gridCount(defenseGrid1, 1)==12):
         print("Place your Aircraft Carrier (5 Squares Long")
         shipLength=5
     inputX = input("X coordinate from 1-10\n")
@@ -196,16 +191,16 @@ cls("Your ships:")
 printGrid(defenseGrid1)
 sleep(3)
 print("The bot is chosing ship locations. ")
-while(searchGrid(defenseGrid2, 1)<17):
-    if(searchGrid(defenseGrid2, 1)==0):
+while(gridCount(defenseGrid2, 1)<17):
+    if(gridCount(defenseGrid2, 1)==0):
         shipLength=2;
-    if(searchGrid(defenseGrid2, 1)==2):
+    if(gridCount(defenseGrid2, 1)==2):
         shipLength=3;
-    if(searchGrid(defenseGrid2, 1)==5):
+    if(gridCount(defenseGrid2, 1)==5):
         shipLength=3
-    if(searchGrid(defenseGrid2, 1)==8):
+    if(gridCount(defenseGrid2, 1)==8):
         shipLength=4
-    if(searchGrid(defenseGrid2, 1)==12):
+    if(gridCount(defenseGrid2, 1)==12):
         shipLength=5
     shipX=randint(0,9)
     shipY=randint(0,9)
@@ -217,7 +212,7 @@ game=True
 turnCount=1
 while(game):
     if(turnCount%2>0):
-        if(searchGrid(offenseGrid1, 0)<100):
+        if(gridCount(offenseGrid1, 0)<100):
             print("Your hits and misses: ")
         printGrid(offenseGrid1)
         print("It is your turn! Choose the cell to attack! ")
@@ -230,7 +225,7 @@ while(game):
         if(errormessage=="hit"):
             print("You hit a ship! ")
             XY=str(attackX)+str(attackY)
-            if(searchGrid(shipsGrid2, XY)>0):
+            if(gridCount(shipsGrid2, XY)>0):
                 queueBreak=False
                 for X in range(0,len(shipsGrid2)):
                     if(queueBreak):
@@ -252,7 +247,7 @@ while(game):
                                 sleep(2)
                             queueBreak=True
                             break
-            if(searchGrid(defenseGrid2, 1)==searchGrid(offenseGrid1, 2)):
+            if(gridCount(defenseGrid2, 1)==gridCount(offenseGrid1, 2)):
                 print("You won congratulations! ")
                 game=False
             turnCount+=1
@@ -286,7 +281,7 @@ while(game):
         if(errormessage=="hit"):
             print("The bot hit you! ")
             XY=str(attackX)+str(attackY)
-            if(searchGrid(shipsGrid1, XY)>0):
+            if(gridCount(shipsGrid1, XY)>0):
                 queueBreak=False
                 for X in range(0,len(shipsGrid1)):
                     if(queueBreak):
@@ -307,7 +302,7 @@ while(game):
                                     print("Your aircraft carrier has sunk!")
                             queueBreak=True
                             break
-            if(searchGrid(defenseGrid1, 1)==0):
+            if(gridCount(defenseGrid1, 1)==0):
                 print("The bot won. Better luck next time!")
                 game=False
             turnCount+=1
