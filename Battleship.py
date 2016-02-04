@@ -138,11 +138,11 @@ def addShip(shipX,shipY,direction,length,gridVar,bot=False):
         return "direction"
     return "good"
 directionDict = {0:'u',1:'d',2:'l',3:'r'}
-cell = {0:'-',1:'#',2:'X',3:'O'}
+cell = {0:'-',1:'O',2:'#',3:'X'}
 empty = 0   #Constant
-ship = 1    #Constant
-hit = 2     #Constant
-miss = 3    #Constant
+miss = 1    #Constant
+ship = 2    #Constant
+hit = 3     #Constant
 gridSize = 10
 queueGrid1 = []
 offenseGrid1 = []
@@ -180,7 +180,7 @@ while(searchGrid(defenseGrid1, 1)<17):
     print(shipY)
     shipDirection = input("Is it facing up, down, left, or right?\n").lower()[0:1]
     errormessage = addShip(int(shipX)-1, int(shipY)-1, shipDirection, shipLength, defenseGrid1)
-    cls("Placeing ships... ")
+    cls("Placing ships... ")
     if(errormessage=="good"):
         print("Ship placed. ")
     else:
