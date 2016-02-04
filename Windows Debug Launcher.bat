@@ -1,0 +1,2 @@
+python battleship.py
+pause
