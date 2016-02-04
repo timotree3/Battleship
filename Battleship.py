@@ -48,19 +48,18 @@ def printGrid(gridVar):
             print(cell[gridVar[x][y]]," ",end="")
         print()
 def addShip(shipX,shipY,direction,length,gridVar,bot=False):
-    filler=1
-    beforeCount = gridCount(gridVar, filler)
+    beforeCount = gridCount(gridVar, ship)
     if(direction=="u"):
         if(shipY-length>=-1):
             for y in range(shipY, shipY-length,-1):
-                if(gridVar[shipX][y]==filler):
+                if(gridVar[shipX][y]==ship):
                     return "ship"
             if(bot):
                 shipsGrid2.append([])
             else:
                 shipsGrid1.append([])
             for y in range(shipY, shipY-length,-1):
-                gridVar[shipX][y]=filler
+                gridVar[shipX][y]=ship
                 if(bot):
                     shipsGrid2[len(shipsGrid2)-1].append(str(shipX)+str(y))
                 else:
@@ -72,14 +71,14 @@ def addShip(shipX,shipY,direction,length,gridVar,bot=False):
     if(direction=="d"):
         if(shipY+length<=len(gridVar)):
             for y in range(shipY, shipY+length):
-                if(gridVar[shipX][y]==filler):
+                if(gridVar[shipX][y]==ship):
                     return "ship"
             if(bot):
                 shipsGrid2.append([])
             else:
                 shipsGrid1.append([])
             for y in range(shipY, shipY+length):
-                gridVar[shipX][y]=filler
+                gridVar[shipX][y]=ship
                 if(bot):
                     shipsGrid2[len(shipsGrid2)-1].append(str(shipX)+str(y))
                 else:
@@ -91,14 +90,14 @@ def addShip(shipX,shipY,direction,length,gridVar,bot=False):
     if(direction=="l"):
         if(shipX-length>=-1):
             for x in range(shipX, shipX-length,-1):
-                if(gridVar[x][shipY]==filler):
+                if(gridVar[x][shipY]==ship):
                     return "ship"
             if(bot):
                 shipsGrid2.append([])
             else:
                 shipsGrid1.append([])
             for x in range(shipX, shipX-length,-1):
-                gridVar[x][shipY]=filler
+                gridVar[x][shipY]=ship
                 if(bot):
                     shipsGrid2[len(shipsGrid2)-1].append(str(x)+str(shipY))
                 else:
@@ -110,14 +109,14 @@ def addShip(shipX,shipY,direction,length,gridVar,bot=False):
     if(direction=="r"):
         if(shipX+length<=len(gridVar)):
             for x in range(shipX, shipX+length):
-                if(gridVar[x][shipY]==filler):
+                if(gridVar[x][shipY]==ship):
                     return "ship"
             if(bot):
                 shipsGrid2.append([])
             else:
                 shipsGrid1.append([])
             for x in range(shipX, shipX+length):
-                gridVar[x][shipY]=filler
+                gridVar[x][shipY]=ship
                 if(bot):
                     shipsGrid2[len(shipsGrid2)-1].append(str(x)+str(shipY))
                 else:
@@ -126,7 +125,7 @@ def addShip(shipX,shipY,direction,length,gridVar,bot=False):
             return "out"
     else:
         rFail=True
-    if(gridCount(gridVar, filler) == beforeCount):
+    if(gridCount(gridVar, ship) == beforeCount):
         return "direction"
     return "good"
 directionDict = {0:'u',1:'d',2:'l',3:'r'}
@@ -149,26 +148,26 @@ createGrid(gridSize,offenseGrid2)
 createGrid(gridSize,defenseGrid1)
 createGrid(gridSize,defenseGrid2)
 createGrid(gridSize,queueGrid1)
-#0=Empty 1=Ship 2=Hit 3=Miss
+#0=Empty 1=Miss 2=Ship 3=Hit
 cls("Placing ships... ")
-while(gridCount(defenseGrid1, 1)<17):
-    if(gridCount(defenseGrid1, 1)==0):
+while(gridCount(defenseGrid1, ship)<17):
+    if(gridCount(defenseGrid1, ship)==0):
         print("Place your Patrol Boat (2 Squares Long)")
         shipLength=2;
-    if(gridCount(defenseGrid1, 1)==2):
+    if(gridCount(defenseGrid1, ship)==2):
         print("Place your Cruiser (3 Squares Long)")
         shipLength=3;
-    if(gridCount(defenseGrid1, 1)==5):
+    if(gridCount(defenseGrid1, ship)==5):
         print("Place your Submarine (3 Squares Long)")
         shipLength=3
-    if(gridCount(defenseGrid1, 1)==8):
+    if(gridCount(defenseGrid1, ship)==8):
         print("Place your Battleship (4 Squares Long)")
         shipLength=4
-    if(gridCount(defenseGrid1, 1)==12):
+    if(gridCount(defenseGrid1, ship)==12):
         print("Place your Aircraft Carrier (5 Squares Long")
         shipLength=5
-    inputX = input("X coordinate from 1-10\n")
-    inputY = input("Y coordinate from 1-10\n")
+    inputX = input("X coordinate from 1-"+str(gridSize)+"\n")
+    inputY = input("Y coordinate from 1-"+str(gridSize)+"\n")
     shipX = re.sub(r"\D","",inputX)
     shipY = re.sub(r"\D","",inputY)
     print(shipX)
@@ -191,16 +190,16 @@ cls("Your ships:")
 printGrid(defenseGrid1)
 sleep(3)
 print("The bot is chosing ship locations. ")
-while(gridCount(defenseGrid2, 1)<17):
-    if(gridCount(defenseGrid2, 1)==0):
+while(gridCount(defenseGrid2, ship)<17):
+    if(gridCount(defenseGrid2, ship)==0):
         shipLength=2;
-    if(gridCount(defenseGrid2, 1)==2):
+    if(gridCount(defenseGrid2, ship)==2):
         shipLength=3;
-    if(gridCount(defenseGrid2, 1)==5):
+    if(gridCount(defenseGrid2, ship)==5):
         shipLength=3
-    if(gridCount(defenseGrid2, 1)==8):
+    if(gridCount(defenseGrid2, ship)==8):
         shipLength=4
-    if(gridCount(defenseGrid2, 1)==12):
+    if(gridCount(defenseGrid2, ship)==12):
         shipLength=5
     shipX=randint(0,9)
     shipY=randint(0,9)
@@ -212,12 +211,12 @@ game=True
 turnCount=1
 while(game):
     if(turnCount%2>0):
-        if(gridCount(offenseGrid1, 0)<100):
+        if(gridCount(offenseGrid1, empty)<gridSize^2):
             print("Your hits and misses: ")
         printGrid(offenseGrid1)
         print("It is your turn! Choose the cell to attack! ")
-        attackX=eval(input("X coordinate from 1-10\n"))-1
-        attackY=eval(input("Y coordinate from 1-10\n"))-1
+        attackX=eval(input("X coordinate from 1-",str(gridSize),"\n"))-1
+        attackY=eval(input("Y coordinate from 1-",str(gridSize),"\n"))-1
         errormessage=attackCell(attackX, attackY)
         if(errormessage=="miss"):
             print("You didn't hit a ship! ")
@@ -247,7 +246,7 @@ while(game):
                                 sleep(2)
                             queueBreak=True
                             break
-            if(gridCount(defenseGrid2, 1)==gridCount(offenseGrid1, 2)):
+            if(gridCount(defenseGrid2, ship)==gridCount(offenseGrid1, hit)):
                 print("You won congratulations! ")
                 game=False
             turnCount+=1
@@ -256,13 +255,13 @@ while(game):
         if(errormessage=="out"):
             print("Out of bounds. Choose a different cell. ")
     else:
-        attackX=randint(0,9)
-        attackY=randint(0,9)
+        attackX=randint(0,gridSize-1)
+        attackY=randint(0,gridSize-1)
         queueBreak=False
-        for x in range(0,10):
+        for x in range(0,gridSize):
             if(queueBreak):
                 break
-            for y in range(0,10):
+            for y in range(0,gridSize):
                 if(queueGrid1[x][y]==1):
                     attackX=x
                     attackY=y
@@ -271,7 +270,7 @@ while(game):
         errormessage=attackCell(attackX, attackY, bot)
         attackX+=1
         attackY+=1
-        if(errormessage!="retry"):
+        if(errormessage != "retry"):
             print("Your ships and shots the bot has fired: ")
             printGrid(defenseGrid1)
             print("Bot:",attackX,attackY)
@@ -302,7 +301,7 @@ while(game):
                                     print("Your aircraft carrier has sunk!")
                             queueBreak=True
                             break
-            if(gridCount(defenseGrid1, 1)==0):
+            if(gridCount(defenseGrid1, ship)==0):
                 print("The bot won. Better luck next time!")
                 game=False
             turnCount+=1
