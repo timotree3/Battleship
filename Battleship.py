@@ -171,7 +171,7 @@ while(gridCount(defenseGrid1, ship)<17):
 cls("Your ships:")
 printGrid(defenseGrid1)
 sleep(3)
-print("The bot is chosing ship locations. ")
+print("The bot is choosing ship locations. ")
 while(gridCount(defenseGrid2, ship)<17):
     if(gridCount(defenseGrid2, ship)==0):
         shipLength=2;
@@ -187,7 +187,7 @@ while(gridCount(defenseGrid2, ship)<17):
     shipY=randint(0,9)
     direction=directionDict[randint(0,3)]
     addShip(shipX, shipY, direction, shipLength, 2)
-print("The bot has placed it's ships. ")
+print("The bot has placed its ships. ")
 sleep(2)
 game=True
 turnCount=0
