@@ -160,17 +160,17 @@ while(gridCount(defenseGrid1, ship)<17):
         print("Ship placed.")
     else:
         if(errormessage=="ship"):
-            print("There is already a ship in that Square. ")
+            print("There is already a ship in that Square.")
         if(errormessage=="out"):
-            print("That's out of bounds. ")
+            print("That's out of bounds.")
         if(errormessage=="direction"):
-            print("Invalid direction. ")
-        print("Failed to place ship. ")
+            print("Invalid direction.")
+        print("Failed to place ship.")
     printGrid(defenseGrid1)
 cls("Your ships:")
 printGrid(defenseGrid1)
 sleep(2)
-cls("Your enemy is placing its ships.")
+cls("Your enemy is placing ships.")
 while(gridCount(defenseGrid2, ship)<17):
     if(gridCount(defenseGrid2, ship)==0):
         shipLength=2;
