@@ -30,5 +30,5 @@ NOCOLOR = '\033[0m'     #end color formatting and return to normal
 CMDTEXT = '\033[32m'    #green for user prompts
 CMDCURS = '\033[5;32m'  #blinking green for cursor underscore prompt
 # Sample Usage
-print BRIGHT  + "     Map of Computer's Fleet                   Map of YOUR Fleet"
+print BRIGHT  + "     Map of Computer's Fleet                   Map of YOUR Fleet" + NOCOLOR
 print SYMBOLS + "   A  B  C  D  E  F  G  H  I  J           A  B  C  D  E  F  G  H  I  J" + NOCOLOR
