@@ -15,12 +15,12 @@
 8  -  -  -  -  -  -  -  -  -  -        8  -  -  -  #  #  #  #  #  -  #
 9  -  -  -  -  -  -  -  -  -  -        9  -  -  -  -  -  -  -  -  -  #
 
-Fire on Coordinates? _
-
-Your Attacks:                         Computer's Attacks:
- C3 - Hit! Sunk Patrol Boat            F5 - Miss!
- D3 - Hit!                             A6 - Miss!
-
+Fire on Coordinates? _                                            
+                                                                   Symbol Key:
+Your Attacks:                         Computer's Attacks:          - Ocean
+ C3 - Hit! Sunk Patrol Boat            F5 - Miss!                  # Ship
+ D3 - Hit!                             A6 - Miss!                  0 Miss
+                                                                   X Hit
 
 # Color escape sequences
 SYMBOLS = '\033[36m'    #cyan for grid letters and numbers
