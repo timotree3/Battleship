@@ -1,22 +1,22 @@
 
-              ===TimoTree Battleship===
+                 ===TimoTree Battleship===
 
 Map of Computer's Fleet         Map of Your Fleet
 
-  A B C D E F G H I J          A B C D E F G H I J
-0 - - - - - - - - - -        0 # - - - - - - - - #
-1 - - - - - - - - - -        1 # - - - - - - - - #
-2 - - - - - - - - - -        2 - - - # # # # - - #
-3 - - X X - - - - - -        3 - - - - - - - - - -
-4 - - - - - - - - - -        4 - - - - - - - - - -
-5 - - - - - - - - - -        5 - - - - - - 0 - - -
-6 - - - - - - - - - -        6 0 - - - - - - - - -
-7 - - - - - - - - - -        7 - - - - - - - - - #
-8 - - - - - - - - - -        8 - - - # # # # # - #
-9 - - - - - - - - - -        9 - - - - - - - - - #
+  A  B  C  D  E  F  G  H  I  J          A  B  C  D  E  F  G  H  I  J
+0 -  -  -  -  -  -  -  -  -  -        0 #  -  -  -  -  -  -  -  -  #
+1 -  -  -  -  -  -  -  -  -  -        1 #  -  -  -  -  -  -  -  -  #
+2 -  -  -  -  -  -  -  -  -  -        2 -  -  -  #  #  #  #  -  -  #
+3 -  -  X  X  -  -  -  -  -  -        3 -  -  -  -  -  -  -  -  -  -
+4 -  -  -  -  -  -  -  -  -  -        4 -  -  -  -  -  -  -  -  -  -
+5 -  -  -  -  -  -  -  -  -  -        5 -  -  -  -  -  O  -  -  -  -
+6 -  -  -  -  -  -  -  -  -  -        6 O  -  -  -  -  -  -  -  -  -
+7 -  -  -  -  -  -  -  -  -  -        7 -  -  -  -  -  -  -  -  -  #
+8 -  -  -  -  -  -  -  -  -  -        8 -  -  -  #  #  #  #  #  -  #
+9 -  -  -  -  -  -  -  -  -  -        9 -  -  -  -  -  -  -  -  -  #
 
 Fire on Coordinates? _
 
-Your Attacks:                Computer's Attacks:
- C3 - Hit! Sunk Patrol Boat   F5 - Miss!
- D3 - Hit!                    A6 - Miss!
+Your Attacks:                         Computer's Attacks:
+ C3 - Hit! Sunk Patrol Boat            F5 - Miss!
+ D3 - Hit!                             A6 - Miss!
