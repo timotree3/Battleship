@@ -44,89 +44,61 @@ def printGrid(gridVar):
         print()
 def addShip(shipX,shipY,direction,length,player):
     if(player==1):
-        gridVar=defenseGrid1
+        defenseGrid=defenseGrid1
+        shipsGrid=shipsGrid1
     elif(player==2):
-        gridVar=defenseGrid2
+        defenseGrid=defenseGrid2
+        shipsGrid=shipsGrid2
     bot = hotfixDict[player]
-    beforeCount = gridCount(gridVar, ship)
+    beforeCount = gridCount(defenseGrid, ship)
     if(direction=="u"):
         if(shipY-length>=-1):
             for y in range(shipY, shipY-length,-1):
-                if(gridVar[shipX][y]==ship):
+                if(defenseGrid[shipX][y]==ship):
                     return "ship"
-            if(bot):
-                shipsGrid2.append([])
-            else:
-                shipsGrid1.append([])
+            shipsGrid.append([])
             for y in range(shipY, shipY-length,-1):
-                gridVar[shipX][y]=ship
-                if(bot):
-                    shipsGrid2[len(shipsGrid2)-1].append(str(shipX)+str(y))
-                else:
-                    shipsGrid1[len(shipsGrid2)-1].append(str(shipX)+str(y))
+                defenseGrid[shipX][y]=ship
+                shipsGrid[len(shipsGrid)-1].append(str(shipX)+str(y))
         else:
             return "out"
-    else:
-        uFail=True
-    if(direction=="d"):
-        if(shipY+length<=len(gridVar)):
+    elif(direction=="d"):
+        if(shipY+length<=len(defenseGrid)):
             for y in range(shipY, shipY+length):
-                if(gridVar[shipX][y]==ship):
+                if(defenseGrid[shipX][y]==ship):
                     return "ship"
-            if(bot):
-                shipsGrid2.append([])
-            else:
-                shipsGrid1.append([])
+            shipsGrid.append([])
             for y in range(shipY, shipY+length):
-                gridVar[shipX][y]=ship
-                if(bot):
-                    shipsGrid2[len(shipsGrid2)-1].append(str(shipX)+str(y))
-                else:
-                    shipsGrid1[len(shipsGrid2)-1].append(str(shipX)+str(y))
+                defenseGrid[shipX][y]=ship
+                shipsGrid[len(shipsGrid)-1].append(str(shipX)+str(y))
         else:
             return "out"
-    else:
-        dFail=True
-    if(direction=="l"):
+    elif(direction=="l"):
         if(shipX-length>=-1):
             for x in range(shipX, shipX-length,-1):
-                if(gridVar[x][shipY]==ship):
+                if(defenseGrid[x][shipY]==ship):
                     return "ship"
-            if(bot):
-                shipsGrid2.append([])
-            else:
-                shipsGrid1.append([])
+            shipsGrid.append([])
             for x in range(shipX, shipX-length,-1):
-                gridVar[x][shipY]=ship
-                if(bot):
-                    shipsGrid2[len(shipsGrid2)-1].append(str(x)+str(shipY))
-                else:
-                    shipsGrid1[len(shipsGrid2)-1].append(str(x)+str(shipY))
+                defenseGrid[x][shipY]=ship
+                shipsGrid[len(shipsGrid)-1].append(str(x)+str(shipY))
         else:
             return "out"
-    else:
-        lFail=True
-    if(direction=="r"):
-        if(shipX+length<=len(gridVar)):
+    elif(direction=="r"):
+        if(shipX+length<=len(defenseGrid)):
             for x in range(shipX, shipX+length):
-                if(gridVar[x][shipY]==ship):
+                if(defenseGrid[x][shipY]==ship):
                     return "ship"
-            if(bot):
-                shipsGrid2.append([])
-            else:
-                shipsGrid1.append([])
+            shipsGrid.append([])
             for x in range(shipX, shipX+length):
-                gridVar[x][shipY]=ship
-                if(bot):
-                    shipsGrid2[len(shipsGrid2)-1].append(str(x)+str(shipY))
-                else:
-                    shipsGrid1[len(shipsGrid2)-1].append(str(x)+str(shipY))
+                defenseGrid[x][shipY]=ship
+                shipsGrid[len(shipsGrid)-1].append(str(x)+str(shipY))
         else:
             return "out"
     else:
-        rFail=True
-    if(gridCount(gridVar, ship) == beforeCount):
         return "direction"
+    if(gridCount(defenseGrid, ship) < beforeCount + length):
+        raise CustomError("Not enough ship tiles placed.")
     return "good"
 class CustomError(Exception):
     def __init__(self, errorName):
