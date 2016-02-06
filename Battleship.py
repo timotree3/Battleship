@@ -30,20 +30,22 @@ def attackCell(attackX,attackY,player):
 		return("out")
 	else:
 		gridDefense[attackX][attackY]+=1
-def gridCount(grid,value):
-	count=0
-	for x in range(0, len(grid)):
-		for y in range(0, len(grid[x])):
-			if(grid[x][y]==value):
-				count+=1
-	return count
+def listCount(array,value,func=lambda a, b: a.count(b),maximum=0):
+	num=func(array,value)
+	for i in array:
+		if(num<maximum or not maximum):
+			if(str(type(i))[-6:-2]=='list'):
+				num+=listCount(i,value,func)
+		else:
+			return maximum
+	return num
 def printGrid(grid,team="defense"):
 	for y in range(0, len(grid[0])):
 		for x in range(0, len(grid)):
-			if(team=="defense"):
-				print(cellDefense[grid[x][y]]," ",end="")
-			elif(team=="offense"):
-				print(cellOffense[grid[x][y]]," ",end="")
+			if(grid[x][y]==ship and team=="offense"):
+				print(cell[empty]," ",end="")
+			else:
+				print(cell[grid[x][y]]," ",end="")
 		print()
 def addShip(shipX,shipY,direction,length,player):
 	if(player==0):
@@ -52,7 +54,7 @@ def addShip(shipX,shipY,direction,length,player):
 	elif(player==1):
 		defenseGrid=defenseGrid2
 		shipsGrid=shipsGrid2
-	beforeCount=gridCount(defenseGrid, ship)
+	beforeCount=listCount(defenseGrid, ship)
 	if(direction=="u"):
 		if(shipY-length>=-1):
 			for y in range(shipY, shipY-length,-1):
@@ -99,7 +101,7 @@ def addShip(shipX,shipY,direction,length,player):
 			return "out"
 	else:
 		return "direction"
-	if(gridCount(defenseGrid, ship) < beforeCount + length):
+	if(listCount(defenseGrid, ship) < beforeCount + length):
 		raise GameError("Not enough ship tiles placed.")
 	return "good"
 class GameError(Exception):
@@ -107,34 +109,24 @@ class GameError(Exception):
 		self.errorName = errorName
 	def __str__(self):
 		return repr(self.errorName)
-global directionDict,cell,ships,shipLength,empty,miss,ship,hit,player1,player2,queueGrid1,queueGrid2,shipsGrid1,shipsGrid2
+global directionDict,cell,ships,shipLength,empty,miss,ship,hit,player1,player2,queueGrid1,queueGrid2,shipsGrid1,shipsGrid2,defenseGrid1,defenseGrid2
+empty,miss,ship,hit = 0,1,2,3#Constants
 directionDict = {0:'u',1:'d',2:'l',3:'r'}
-cellDefense = {0:'-',1:'O',2:'#',3:'X'}
-cellOffense = {0:'-',1:'O',2:'-',3:'X'}
+cell = {empty:'-',miss:'O',ship:'#',hit:'X'}
 ships = ["patrol boat","cruiser","submarine","battleship","aircraft carrier"]
 shipLength = [2,3,3,4,5]#Constant
-empty = 0#Constant
-miss = 1#Constant
-ship = 2#Constant
-hit = 3#Constant
-player1 = 0#Constant
-player2 = 1#Constant
+player1,player2 = 0,1#Constants
 gridSize = 10#Constant
 attackCellAlreadyAttacked = False#Constant
-queueGrid2 = []
-defenseGrid1 = []
-defenseGrid2 = []
-shipsGrid1 = []
-shipsGrid2 = []
+queueGrid1,queueGrid2,defenseGrid1,defenseGrid2,shipsGrid1,shipsGrid2 = [],[],[],[],[],[]
 createGrid(gridSize,defenseGrid1)
 createGrid(gridSize,defenseGrid2)
 createGrid(gridSize,queueGrid2)
-#0=Empty 1=Miss 2=Ship 3=Hit
 cls("Place your ships")
-while(gridCount(defenseGrid1, ship)<sum(shipLength)):
+while(listCount(defenseGrid1, ship)<sum(shipLength)):
 	shipID=len(shipLength)
 	for shipCount in reversed(list(accumulate(shipLength))):
-		if(shipCount==gridCount(defenseGrid1, ship)):
+		if(shipCount==listCount(defenseGrid1, ship)):
 			break
 		shipID-=1
 	print("Place your "+ str(ships[shipID]) + " (" + repr(shipLength[shipID]) + " cells long)")
@@ -160,10 +152,10 @@ cls("Your ships:")
 printGrid(defenseGrid1)
 sleep(2)
 cls("Your enemy is placing ships.")
-while(gridCount(defenseGrid2, ship)<sum(shipLength)):
+while(listCount(defenseGrid2, ship)<sum(shipLength)):
 	shipID=len(shipLength)
 	for shipCount in reversed(list(accumulate(shipLength))):
-		if(shipCount==gridCount(defenseGrid2, ship)):
+		if(shipCount==listCount(defenseGrid2, ship)):
 			break
 		shipID-=1
 	shipX=randint(0,gridSize-1)
@@ -180,8 +172,8 @@ while(game):
 			cls("Attack a cell:")
 		printGrid(defenseGrid2,"offense")
 		print("It is your turn! Choose the cell to attack!")
-		attackX=eval(input("X coordinate from 1-"+repr(gridSize)+"\n"))-1
-		attackY=eval(input("Y coordinate from 1-"+repr(gridSize)+"\n"))-1
+		attackX=int(input("X coordinate from 1-"+repr(gridSize)+"\n"))-1
+		attackY=int(input("Y coordinate from 1-"+repr(gridSize)+"\n"))-1
 		attackMessage=attackCell(attackX, attackY, player1)
 		if(attackMessage=="retry" and attackCellAlreadyAttacked==False):
 			print("You have already attacked that spot. Choose a different cell.")
@@ -194,7 +186,7 @@ while(game):
 			elif(defenseGrid2[attackX][attackY]==hit):
 				print("You hit a ship!")
 				XY=str(attackX)+str(attackY)
-				if(gridCount(shipsGrid2, XY)>0):
+				if(listCount(shipsGrid2, XY,lambda a, b: b in a,1)==1):
 					breakNext=False
 					for X in range(0,len(shipsGrid2)):
 						if(breakNext):
@@ -203,18 +195,15 @@ while(game):
 							if(shipsGrid2[X][Y]==XY):
 								shipsGrid2[X].pop(Y)
 								if(len(shipsGrid2[X])==0):
-									if(X==3):
-										print("Enemy: You sank my "+repr(ships[X])+"!")
-									else:
-										print("You sunk the enemy's "+repr(ships[X])+", nice shot!")
+									print("You sunk the enemy's "+str(ships[X])+", nice shot!")
 								breakNext=True
 								break
 				elif(attackCellAlreadyAttacked):
 					print("You have already attacked that spot, you lose your turn.")
 				else:
 					raise GameError("Hit location not found in shipsGrid2")
-				if(gridCount(defenseGrid2, ship)==0):
-					print("Congratulations, you won!")
+				if(listCount(defenseGrid2, ship,lambda a, b: b in a,1)==0):
+					print("Congratulations, you won in "+str(turnCount+1)+" turns!")
 					game=False
 			sleep(1)
 			turnCount+=1
@@ -242,7 +231,7 @@ while(game):
 			elif(defenseGrid1[attackX][attackY]==hit):
 				print("Your enemy hit you! ")
 				XY=str(attackX)+str(attackY)
-				if(gridCount(shipsGrid1, XY)>0):
+				if(listCount(shipsGrid1, XY,lambda a, b: b in a,1)==1):
 					breakNext=False
 					for X in range(0,len(shipsGrid1)):
 						if(breakNext):
@@ -251,16 +240,13 @@ while(game):
 							if(shipsGrid1[X][Y]==XY):
 								shipsGrid1[X].pop(Y)
 								if(len(shipsGrid1[X])==0):
-									if(X==3):
-										print("Player: You sank my "+repr(ships[X])+"!")
-									else:
-										print("Your "+repr(ships[X])+", has sunk.")
+									print("Your "+repr(ships[X])+", has sunk.")
 								breakNext=True
 								break
 				else:
 					raise GameError("Hit location not found in shipsGrid1")
-				if(gridCount(defenseGrid1, ship)==0):
-					print("Your enemy won. Better luck next time!")
+				if(listCount(shipsGrid2, XY,lambda a, b: b in a,1)==0):
+					print("Your enemy won in "+str(turnCount+1)+" turns. Better luck next time!")
 					game=False
 				if(attackX>0 and defenseGrid1[attackX-1][attackY]%2==0):
 					queueGrid2[attackX-1][attackY] = 1
