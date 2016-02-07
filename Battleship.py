@@ -109,6 +109,8 @@ class GameError(Exception):
 		self.errorName = errorName
 	def __str__(self):
 		return repr(self.errorName)
+inGrid = lambda ig1, ig2: listCount(ig1,ig2,lambda ig3, ig4: ig4 in ig3,1)==1#Returns boolean
+printLoc = lambda text, x, y:print('\033['+str(y)+';'+str(x)+'H'+text)
 global directionDict,cell,ships,shipLength,empty,miss,ship,hit,player1,player2,queueGrid1,queueGrid2,shipsGrid1,shipsGrid2,defenseGrid1,defenseGrid2
 empty,miss,ship,hit = 0,1,2,3#Constants
 directionDict = {0:'u',1:'d',2:'l',3:'r'}
@@ -186,7 +188,7 @@ while(game):
 			elif(defenseGrid2[attackX][attackY]==hit):
 				print("You hit a ship!")
 				XY=str(attackX)+str(attackY)
-				if(listCount(shipsGrid2, XY,lambda a, b: b in a,1)==1):
+				if(inGrid(shipsGrid2,XY)):
 					breakNext=False
 					for X in range(0,len(shipsGrid2)):
 						if(breakNext):
@@ -202,7 +204,7 @@ while(game):
 					print("You have already attacked that spot, you lose your turn.")
 				else:
 					raise GameError("Hit location not found in shipsGrid2")
-				if(listCount(defenseGrid2, ship,lambda a, b: b in a,1)==0):
+				if(not(inGrid(defenseGrid1,ship))):
 					print("Congratulations, you won in "+str(turnCount+1)+" turns!")
 					game=False
 			sleep(1)
@@ -231,7 +233,7 @@ while(game):
 			elif(defenseGrid1[attackX][attackY]==hit):
 				print("Your enemy hit you! ")
 				XY=str(attackX)+str(attackY)
-				if(listCount(shipsGrid1, XY,lambda a, b: b in a,1)==1):
+				if(inGrid(shipsGrid1,XY)):
 					breakNext=False
 					for X in range(0,len(shipsGrid1)):
 						if(breakNext):
@@ -245,7 +247,7 @@ while(game):
 								break
 				else:
 					raise GameError("Hit location not found in shipsGrid1")
-				if(listCount(shipsGrid2, XY,lambda a, b: b in a,1)==0):
+				if(not(inGrid(defenseGrid1,ship))):
 					print("Your enemy won in "+str(turnCount+1)+" turns. Better luck next time!")
 					game=False
 				if(attackX>0 and defenseGrid1[attackX-1][attackY]%2==0):
