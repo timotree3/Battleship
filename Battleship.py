@@ -111,11 +111,18 @@ class GameError(Exception):
 		return repr(self.errorName)
 inGrid = lambda ig1, ig2: listCount(ig1,ig2,lambda ig3, ig4: ig4 in ig3,1)==1#Returns boolean
 printLoc = lambda text, x, y:print('\033['+str(y)+';'+str(x)+'H'+text)
-global directionDict,cell,ships,shipLength,empty,miss,ship,hit,player1,player2,queueGrid1,queueGrid2,shipsGrid1,shipsGrid2,defenseGrid1,defenseGrid2
+global directionDict,cell,ships,shipLength,empty,miss,ship,hit,player1,player2,queueGrid1,queueGrid2,shipsGrid1,shipsGrid2,defenseGrid1,defenseGrid2,cyan,whiteBright,white,whiteDim,red,reset,green
+cyan = '\033[36m'    #cyan for grid letters and numbers
+whiteBright  = '\033[1;37m'  #bold white for misses and maybe titles
+white = '\033[37m' #Normal white
+whiteDim  = '\033[2;37m'  #dim white for grid cells
+red  = '\033[1;31m'  #bold red for hits
+reset = '\033[0m'     #end color formatting and return to normal
+green = '\033[32m'    #green for user prompts
 empty,miss,ship,hit = 0,1,2,3#Constants
 directionDict = {0:'u',1:'d',2:'l',3:'r'}
-cell = {empty:'-',miss:'O',ship:'#',hit:'X'}
-ships = ["patrol boat","cruiser","submarine","battleship","aircraft carrier"]
+cell = {empty:cyan+'~'+reset,miss:whiteBright+'O'+reset,ship:white+'#'+reset,hit:red+'X'+reset}
+ships = ("patrol boat","cruiser","submarine","battleship","aircraft carrier")
 shipLength = [2,3,3,4,5]#Constant
 player1,player2 = 0,1#Constants
 gridSize = 10#Constant
