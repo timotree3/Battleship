@@ -15,13 +15,13 @@ yellow = '\033[0;33m'#yellow for ship
 global regex
 regex = (re.compile(r'[, |.;-]+'),re.compile(r'[A-J]',re.I),re.compile(r'[0-9]'),re.compile(r'(?:[urdl]|up|right|down|left)',re.I))#CONST
 global examples
-examples = {'ship':("Ship location",'A 0 Down | A,0,D | a,0 DoWN'),'attack':("Coordinate",'A,0 | 0,a | a 0')}
+examples = {'ship':("Ship location",'A 0 Down | A,0,D | a,0 DoWN'),'attack':('Coordinate','A,0 | 0,a | a 0')}
 global history,oldScreen
 history = ["game started"]
 oldScreen = []
 refreshCount=0
 global shipName,shipLength
-shipName = ("patrol boat","cruiser","submarine","battleship","aircraft carrier")#CONST
+shipName = ("patrol boat",'cruiser',"submarine",'battleship',"aircraft carrier")#CONST
 shipLength = (2,3,3,4,5)#CONST
 global cell,cellPlain,empty,miss,ship,hit
 empty,miss,ship,hit = 0,1,2,3#CONST
@@ -44,7 +44,7 @@ def addHistory(*args):
 		history.append(arg)
 	y=20
 	maxLength = (get_terminal_size()[1]-1)-y
-	printLoc('\033[2K'+green+"History:",centerAlign("History:"),y)
+	printLoc('\033[2K'+green+"History:",centerAlign('History:'),y)
 	for element in reversed(history[-maxLength:]):
 		y+=1
 		printLoc('\033[2K'+green+element.title()+'.',centerAlign(element+'.'),y)
@@ -69,15 +69,15 @@ def parseInput(text,findDir,default=[None,None,None]):
 		else:
 			return False
 def cls(title=""):
-	print("\033[2J")
+	print('\033[2J')
 	os.system('cls' if os.name == 'nt' else 'clear')
 def attackCell(attackX,attackY,player):
 	gridDefense = defenseGrid[player]
 	try:
 		if(gridDefense[attackX][attackY]%2>0):
-			return("retry")
+			return('retry')
 	except IndexError:
-		return("out")
+		return('out')
 	else:
 		gridDefense[attackX][attackY]+=1
 def recurseList(array,value,func=lambda a, b: a.count(b),func2=lambda a, b, c, d, e, f:a+recurseList(b,c,d,e,f),maximum=None):
@@ -112,10 +112,10 @@ def updateScreen(screen=None):
 		printLoc(legendMiss,centerAlign(legendMiss,7),9)
 		printLoc(legendShip,centerAlign(legendShip,7),10)
 		printLoc(legendHit,centerAlign(legendHit,7),11)
-	for y in range(0,gridSize):
+	for y in range(gridSize):
 		printLoc(whiteDim+str(y),9,7+y)
 		printLoc(whiteDim+str(y),49,7+y)
-		for x in range(0,gridSize):
+		for x in range(gridSize):
 			if(leftGrid[x][y]==ship):
 				printLoc(cell[empty],11+x*2,7+y)
 			else:
@@ -143,21 +143,21 @@ def addShip(x,y,direction,length,player):
 		for yIter in range(y,y+yLength,yStep):
 			try:
 				if(defenseGrid[player][xIter][yIter]==empty):
-					placementQueue.append(str(xIter)+str(yIter))
+					placementQueue.append((str(xIter)+str(yIter)))
 				else:
 					return 'occupied'
 			except IndexError:
 				return 'out'
 	shipsGrid[player].append([])
 	for shipLoc in placementQueue:
-		xIter,yIter = int(shipLoc[0]),int(shipLoc[1])
-		defenseGrid[player][xIter][yIter]=ship
-		shipsGrid[player][-1].append(str(xIter)+str(yIter))
+		x,y = int(shipLoc[0]),int(shipLoc[1])
+		defenseGrid[player][x][y]=ship
+		shipsGrid[player][-1].append(str(x)+str(y))
 	if(recurseList(defenseGrid[player], ship) < beforeCount + length):
 		raise GameError("Not enough ship tiles placed.")
-	return "good"
+	return 'good'
 class GameError(Exception):
-	def __init__(self, errorName="Unknown"):
+	def __init__(self, errorName='Unknown'):
 		self.errorName = errorName
 	def __str__(self):
 		return repr(self.errorName)
@@ -172,15 +172,17 @@ while(recurseList(defenseGrid[player1], ship)<sum(shipLength)):
 		if(shipCount==recurseList(defenseGrid[player1], ship)):
 			break
 		shipID-=1
-	result = parseInput(getInput("Place your "+str(shipName[shipID])+yellow+(' '+cellPlain[ship])*shipLength[shipID],'ship',5),True)
+	result = parseInput(getInput("Place your "+str(shipName[shipID])+yellow+(' '+cellPlain[ship])*shipLength[shipID],'ship',7),True)
 	if(result):
 		shipMessage = addShip(result[0],result[1],result[2],shipLength[shipID],player1)
-		addHistory("placed at "+result[3]+str(result[1]))
+		if(shipMessage=='good'):
+			addHistory("placed at "+result[3]+str(result[1]))
+		elif(shipMessage=='occupied'):
+			addHistory("location already filled")
+		elif(shipMessage=='out'):
+			addHistory("location out of bounds")
 	else:
-		# 	print("There is already a ship in that Square.")
-		# 	print("That's out of bounds.")
-		# 	print("Invalid direction.")
-		addHistory("placement failed")
+		addHistory("invalid ship location")
 	updateScreen()
 while(recurseList(defenseGrid[player2], ship)<sum(shipLength)):
 	shipID=len(shipLength)
@@ -190,7 +192,7 @@ while(recurseList(defenseGrid[player2], ship)<sum(shipLength)):
 		shipID-=1
 	shipX=randint(0,gridSize-1)
 	shipY=randint(0,gridSize-1)
-	direction=directionDict[randint(0,3)]
+	direction=randint(up,left)
 	addShip(shipX, shipY, direction, shipLength[shipID], player2)
 game=True
 turnCount=0
@@ -203,7 +205,7 @@ while(game):
 			attackX=result[0]
 			attackY=result[1]
 			attackMessage = attackCell(attackX,attackY,player2)
-			if(attackMessage=="retry" and attackCellAlreadyAttacked==False):
+			if(attackMessage=='retry' and attackCellAlreadyAttacked==False):
 				print("You have already attacked that spot. Choose a different cell.")
 			else:
 				updateScreen()
@@ -214,10 +216,10 @@ while(game):
 					XY=str(attackX)+str(attackY)
 					if(inGrid(shipsGrid[player2],XY)):
 						breakNext=False
-						for X in range(0,len(shipsGrid[player2])):
+						for X in range(len(shipsGrid[player2])):
 							if(breakNext):
 								break
-							for Y in range(0,len(shipsGrid[player2][X])):
+							for Y in range(len(shipsGrid[player2][X])):
 								if(shipsGrid[player2][X][Y]==XY):
 									shipsGrid[player2][X].pop(Y)
 									if(len(shipsGrid[player2][X])==0):
@@ -233,24 +235,24 @@ while(game):
 						game=False
 				turnCount+=1
 		else:
-			addHistory("attack failed")
+			addHistory("invalid attack location")
 	else:
 		attackX=randint(0,gridSize-1)
 		attackY=randint(0,gridSize-1)
 		breakNext=False
-		for y in range(0,gridSize):
+		for y in range(gridSize):
 			if(breakNext):
 				break
-			for x in range(0,gridSize):
+			for x in range(gridSize):
 				if(queueGrid[player2][x][y]==1):
 					attackX=x
 					attackY=y
 					breakNext=True
 					break
 		atackMessage=attackCell(attackX, attackY, player2)
-		if(attackMessage!="retry"):
+		if(attackMessage!='retry'):
 			updateScreen()
-			print("Enemy:",repr(attackX+1),repr(attackY+1))
+			print('Enemy:',repr(attackX+1),repr(attackY+1))
 			queueGrid[player2][attackX][attackY]=0
 			if(defenseGrid[player1][attackX][attackY]==miss):
 				print("You weren't hit.")
@@ -259,10 +261,10 @@ while(game):
 				XY=str(attackX)+str(attackY)
 				if(inGrid(shipsGrid[player1],XY)):
 					breakNext=False
-					for X in range(0,len(shipsGrid[player1])):
+					for X in range(len(shipsGrid[player1])):
 						if(breakNext):
 							break
-						for Y in range(0,len(shipsGrid[player1][X])):
+						for Y in range(len(shipsGrid[player1][X])):
 							if(shipsGrid[player1][X][Y]==XY):
 								shipsGrid[player1][X].pop(Y)
 								if(len(shipsGrid[player1][X])==0):
