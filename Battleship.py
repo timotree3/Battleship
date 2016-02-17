@@ -35,7 +35,7 @@ global gridSize
 gridSize = 10#CONST
 attackCellAlreadyAttacked = False#CONST
 global queueGrid,defenseGrid,shipsGrid
-defenseGrid,queueGrid = [[*[[[0]*10]*10]*2]]*2
+defenseGrid,queueGrid = [[[[0 for y in range(gridSize)] for x in range(gridSize)] for team in range(2)] for i in range(2)]
 shipsGrid = [[],[]]
 def addHistory(*args):
 	centerAlign = lambda text:(80//2)-len(text)//2
@@ -44,10 +44,10 @@ def addHistory(*args):
 		history.append(arg)
 	y=20
 	maxLength = (get_terminal_size()[1]-1)-y
-	printLoc(green+"History:",centerAlign("History:"),y)
+	printLoc('\033[2K'+green+"History:",centerAlign("History:"),y)
 	for element in reversed(history[-maxLength:]):
 		y+=1
-		printLoc(green+element.title()+'.',centerAlign(element+'.'),y)
+		printLoc('\033[2K'+green+element.title()+'.',centerAlign(element+'.'),y)
 def parseInput(text,findDir,default=[None,None,None]):
 	parsed1 = regex[0].split(text)
 	x,y,direction = default
@@ -89,7 +89,9 @@ def recurseList(array,value,func=lambda a, b: a.count(b),func2=lambda a, b, c, d
 		else:
 			return maximum
 	return result
-def updateScreen(screen=[defenseGrid[player2],defenseGrid[player1],"Map of Enemy Fleet","Map of YOUR Fleet"]):
+def updateScreen(screen=None):
+	if(not(screen)):
+		screen=[defenseGrid[player2],defenseGrid[player1],"Map of Enemy Fleet","Map of YOUR Fleet"]
 	global refreshCount
 	leftGrid,rightGrid,leftTitle,rightTitle = screen[0],screen[1],screen[2],screen[3]
 	title="===TimoTree Battleship==="
@@ -119,7 +121,6 @@ def updateScreen(screen=[defenseGrid[player2],defenseGrid[player1],"Map of Enemy
 			else:
 				printLoc(cell[leftGrid[x][y]],11+x*2,7+y)
 			printLoc(cell[rightGrid[x][y]],51+x*2,7+y)
-	oldScreen = []
 	refreshCount += 1
 def getInput(prompt,example=None,hidden=0):
 	printLoc('\033[2K'+str('\033[32m')+str(prompt),0,18)
