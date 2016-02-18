@@ -117,7 +117,7 @@ def updateScreen(screen=None):
 		printLoc(legendEmpty,centerAlign(legendEmpty,7),8)
 		printLoc(legendMiss,centerAlign(legendMiss,7),9)
 		printLoc(legendShip,centerAlign(legendShip,7),10)
-		printLoc(legendHit,centerAlign(legendHit,7),11)
+		printLoc(legendHit,centerAlign(legendHit,7)-1,11)
 	for y in range(gridSize):
 		printLoc(whiteDim+str(y),9,7+y)
 		printLoc(whiteDim+str(y),49,7+y)
