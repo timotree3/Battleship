@@ -3,6 +3,9 @@ from time import sleep
 from itertools import accumulate
 import os
 import re
+global inGrid,printLoc
+inGrid = lambda array, value: recurseList(array,value,lambda array2, value2: value2 in array2,maximum=1)>0#Returns boolean
+printLoc = lambda text, x, y:print('\033['+str(y)+';'+str(x)+'H'+text+reset)
 global cyan,whiteBright,white,whiteDim,red,reset,green,yellow
 cyan = '\033[0;36m'#cyan for ocean
 whiteBright  = '\033[1;37m'#bold white for misses and maybe titles
@@ -12,17 +15,23 @@ red  = '\033[1;31m'#bold red for hits
 reset = '\033[0m'#end color formatting and return to normal
 green = '\033[32m'#green for user prompts
 yellow = '\033[0;33m'#yellow for ship
-global regex
-regex = (re.compile(r'[, |.;-]+'),re.compile(r'[A-J]',re.I),re.compile(r'[0-9]'),re.compile(r'(?:[urdl]|up|right|down|left)',re.I))#CONST
+seperator = lambda txt:re.split(r'[, |.;/+\\-]+',txt)
+xFilter = lambda txt:re.fullmatch(r'[A-J]',txt,re.I)
+yFilter = lambda txt:re.fullmatch(r'[0-9]',txt)
+dirFilter = lambda txt:re.fullmatch(r'(?:[urdl]|up|right|down|left)',txt,re.I)
 global examples
-examples = {'ship':("Ship location",'A 0 Down | A,0,D | a,0 DoWN'),'attack':('Coordinate','A,0 | 0,a | a 0')}
+examples = {'ship':'A 0 Down | A,0,D | a,0 DoWN','attack':'A,0 | 0,a | a 0',None:'No example found'}
 global history,oldScreen
 history = ["game started"]
 oldScreen = []
 refreshCount=0
-global shipName,shipLength
+global shipName,shipLength,ships
 shipName = ("patrol boat",'cruiser',"submarine",'battleship',"aircraft carrier")#CONST
 shipLength = (2,3,3,4,5)#CONST
+ships = tuple(zip(
+shipName,
+shipLength,
+[0]+list(accumulate(shipLength))))
 global cell,cellPlain,empty,miss,ship,hit
 empty,miss,ship,hit = 0,1,2,3#CONST
 cell = {empty:cyan+'~',miss:whiteBright+'O',ship:yellow+'#',hit:red+'X'}#CONST
@@ -38,8 +47,8 @@ global queueGrid,defenseGrid,shipsGrid
 defenseGrid,queueGrid = [[[[0 for y in range(gridSize)] for x in range(gridSize)] for team in range(2)] for i in range(2)]
 shipsGrid = [[],[]]
 def addHistory(*args):
-	centerAlign = lambda text:(80//2)-len(text)//2
 	from shutil import get_terminal_size
+	centerAlign = lambda text:(80//2)-len(text)//2
 	for arg in args:
 		history.append(arg)
 	y=20
@@ -48,38 +57,35 @@ def addHistory(*args):
 	for element in reversed(history[-maxLength:]):
 		y+=1
 		printLoc('\033[2K'+green+element.title()+'.',centerAlign(element+'.'),y)
-def parseInput(text,findDir,default=[None,None,None]):
-	parsed1 = regex[0].split(text)
-	x,y,direction = default
-	for element in parsed1:
-		if(regex[1].fullmatch(element[0:1]) and x==None):
-			x=element[0:1]
-		elif(regex[2].fullmatch(element[0:1]) and y==None):
-			y=element[0:1]
-		elif(regex[3].fullmatch(element) and direction==None and findDir):
-			direction=element[0:1]
-	if(findDir):
-		if(x and y and direction):
-			return [int(ord(x.upper())-65),int(y),direction.upper(),x]
-		else:
-			return False
-	else:
-		if(x and y):
-			return [int(ord(x.upper())-65),int(y),x]
-		else:
-			return False
+def parseInput(text,preparation,*filters):
+	from itertools import permutations
+	prepared = preparation(text)
+	found = False
+	for inputLength in range(len(filters),len(prepared)+1):
+		for combo in permutations(prepared[:inputLength]):
+			match = [None for i in range(len(filters))]
+			for i, Filter in enumerate(filters):
+				# if(Filter.fullmatch(combo[i])):
+				if(Filter(combo[i])):
+					match[i] = combo[i]
+			if(None not in match):
+				found = True
+				break
+		if(found):
+			return match
+	return False
+	# return [int(ord(x.upper()[:1])-65),int(y),direction.upper()[:1],x]
 def cls(title=""):
-	print('\033[2J')
+	print('\033[s\033[2J\033[u')
 	os.system('cls' if os.name == 'nt' else 'clear')
 def attackCell(attackX,attackY,player):
-	gridDefense = defenseGrid[player]
 	try:
-		if(gridDefense[attackX][attackY]%2>0):
+		if(defenseGrid[player][attackX][attackY]%2>0):
 			return('retry')
 	except IndexError:
 		return('out')
 	else:
-		gridDefense[attackX][attackY]+=1
+		defenseGrid[player][attackX][attackY]+=1
 def recurseList(array,value,func=lambda a, b: a.count(b),func2=lambda a, b, c, d, e, f:a+recurseList(b,c,d,e,f),maximum=None):
 	result=func(array,value)
 	for element in array:
@@ -123,12 +129,9 @@ def updateScreen(screen=None):
 			printLoc(cell[rightGrid[x][y]],51+x*2,7+y)
 	refreshCount += 1
 def getInput(prompt,example=None,hidden=0):
-	printLoc('\033[2K'+str('\033[32m')+str(prompt),0,18)
-	if(example):
-		printLoc('\033[2K'+examples[example][0]+' examples: ('+examples[example][1]+')',0,19)
-	else:
-		printLoc('\033[2K'+"No example found.",0,19)
-	answer=input(reset+"\033[18;"+str(len(prompt)+2-hidden)+"H"+reset)
+	printLoc('\033[2K'+green+str(prompt),0,18)
+	printLoc('\033[2K'+green+'Example(s): ('+examples[example]+')',0,19)
+	answer=input("\033[18;"+str(len(prompt)+2-hidden)+"H"+reset)
 	printLoc('\033[2K',0,18)
 	printLoc('\033[2K',0,19)
 	return answer.strip()
@@ -143,7 +146,7 @@ def addShip(x,y,direction,length,player):
 		for yIter in range(y,y+yLength,yStep):
 			try:
 				if(defenseGrid[player][xIter][yIter]==empty):
-					placementQueue.append((str(xIter)+str(yIter)))
+					placementQueue.append((str(xIter),str(yIter)))
 				else:
 					return 'occupied'
 			except IndexError:
@@ -152,31 +155,27 @@ def addShip(x,y,direction,length,player):
 	for shipLoc in placementQueue:
 		x,y = int(shipLoc[0]),int(shipLoc[1])
 		defenseGrid[player][x][y]=ship
-		shipsGrid[player][-1].append(str(x)+str(y))
+		shipsGrid[player][-1].append((str(x),str(y)))
 	if(recurseList(defenseGrid[player], ship) < beforeCount + length):
 		raise GameError("Not enough ship tiles placed.")
 	return 'good'
 class GameError(Exception):
-	def __init__(self, errorName='Unknown'):
+	def __init__(self, errorName='unknown'):
 		self.errorName = errorName
 	def __str__(self):
-		return repr(self.errorName)
-global inGrid,printLoc
-inGrid = lambda array, value: recurseList(array,value,lambda array2, value2: value2 in array2,maximum=1)>0#Returns boolean
-printLoc = lambda text, x, y:print('\033['+str(y)+';'+str(x)+'H'+text+reset)
+		return str(self.errorName[:1].upper()+self.errorName[1:])
 updateScreen()
 addHistory()
 while(recurseList(defenseGrid[player1], ship)<sum(shipLength)):
-	shipID=len(shipLength)
-	for shipCount in reversed(list(accumulate(shipLength))):
-		if(shipCount==recurseList(defenseGrid[player1], ship)):
+	for shipInfo in ships:
+		if(shipInfo[2]==recurseList(defenseGrid[player1], ship)):
 			break
-		shipID-=1
-	result = parseInput(getInput("Place your "+str(shipName[shipID])+yellow+(' '+cellPlain[ship])*shipLength[shipID],'ship',7),True)
+	result = parseInput(getInput("Place your "+str(shipInfo[0])+yellow+(' '+cellPlain[ship])*shipInfo[1],'ship',7),seperator,xFilter,yFilter,dirFilter)
 	if(result):
-		shipMessage = addShip(result[0],result[1],result[2],shipLength[shipID],player1)
+		shipX,shipY,shipDir,prettyX = int(ord(result[0].upper())-65),int(result[1]),result[2].upper()[:1],result[0]
+		shipMessage = addShip(shipX,shipY,shipDir,shipInfo[1],player1)
 		if(shipMessage=='good'):
-			addHistory("placed at "+result[3]+str(result[1]))
+			addHistory("placed at "+prettyX+str(shipY))
 		elif(shipMessage=='occupied'):
 			addHistory("location already filled")
 		elif(shipMessage=='out'):
@@ -185,53 +184,49 @@ while(recurseList(defenseGrid[player1], ship)<sum(shipLength)):
 		addHistory("invalid ship location")
 	updateScreen()
 while(recurseList(defenseGrid[player2], ship)<sum(shipLength)):
-	shipID=len(shipLength)
-	for shipCount in reversed(list(accumulate(shipLength))):
-		if(shipCount==recurseList(defenseGrid[player2], ship)):
+	for shipInfo in ships:
+		if(shipInfo[2]==recurseList(defenseGrid[player2], ship)):
 			break
-		shipID-=1
 	shipX=randint(0,gridSize-1)
 	shipY=randint(0,gridSize-1)
 	direction=randint(up,left)
-	addShip(shipX, shipY, direction, shipLength[shipID], player2)
+	addShip(shipX, shipY, direction, shipInfo[1], player2)
 game=True
 turnCount=0
 while(game):
 	if(turnCount%2==0):
 		updateScreen()
-		# print("Attack a cell")
-		result = parseInput(getInput("Attack a cell",'attack'),False)
+		result = parseInput(getInput("Attack a cell",'attack'),seperator,xFilter,yFilter)
 		if(result):
-			attackX=result[0]
-			attackY=result[1]
+			attackX,attackY,prettyX = int(ord(result[0].upper())-65),int(result[1]),result[0]
 			attackMessage = attackCell(attackX,attackY,player2)
 			if(attackMessage=='retry' and attackCellAlreadyAttacked==False):
-				print("You have already attacked that spot. Choose a different cell.")
+				addHistory("cell already attacked")
+			elif(attackCellAlreadyAttacked):
+				addHistory("attack wasted")
 			else:
 				updateScreen()
 				if(defenseGrid[player2][attackX][attackY]==miss):
-					print("You didn't hit a ship.")
+					addHistory(str(prettyX)+str(attackY)+" miss")
 				elif(defenseGrid[player2][attackX][attackY]==hit):
-					print("You hit a ship!")
-					XY=str(attackX)+str(attackY)
-					if(inGrid(shipsGrid[player2],XY)):
-						breakNext=False
-						for X in range(len(shipsGrid[player2])):
-							if(breakNext):
-								break
-							for Y in range(len(shipsGrid[player2][X])):
-								if(shipsGrid[player2][X][Y]==XY):
-									shipsGrid[player2][X].pop(Y)
-									if(len(shipsGrid[player2][X])==0):
-										print("You sunk the enemy's "+str(shipName[X])+", nice shot!")
-									breakNext=True
+					addHistory(str(prettyX)+str(attackY)+" hit")
+					XY=(str(attackX),str(attackY))
+					if(inGrid(shipsGrid[player1],XY)):
+						queuedBreak = False
+						for i, shipCells in enumerate(shipsGrid[player2]):
+							if queuedBreak: break
+							for location in shipCells:
+								if(location==XY):
+									shipCells.remove(location)
+									if(len(shipCells)==0):
+										addHistory("sunk enemy's "+str(shipName[i]))
+									queuedBreak = True
 									break
-					elif(attackCellAlreadyAttacked):
-						print("You have already attacked that spot, you lose your turn.")
 					else:
 						raise GameError("Hit location not found in shipsGrid")
 					if(not(inGrid(defenseGrid[player1],ship))):
-						print("Congratulations, you won in "+str(turnCount+1)+" turns!")
+						printLoc('\033[J',0,17)
+						printLoc("You won in "+str(turnCount)+" turns!",(80-len("You won in "+str(turnCount)+" turns!"))//2,18)
 						game=False
 				turnCount+=1
 		else:
@@ -249,32 +244,31 @@ while(game):
 					attackY=y
 					breakNext=True
 					break
-		atackMessage=attackCell(attackX, attackY, player2)
+		atackMessage=attackCell(attackX, attackY, player1)
 		if(attackMessage!='retry'):
 			updateScreen()
-			print('Enemy:',repr(attackX+1),repr(attackY+1))
 			queueGrid[player2][attackX][attackY]=0
 			if(defenseGrid[player1][attackX][attackY]==miss):
-				print("You weren't hit.")
+				addHistory(str(chr(attackX+65))+str(attackY)+" miss")
 			elif(defenseGrid[player1][attackX][attackY]==hit):
-				print("Your enemy hit you! ")
-				XY=str(attackX)+str(attackY)
+				addHistory(str(chr(attackX+65))+str(attackY)+" hit")
+				XY=(str(attackX),str(attackY))
 				if(inGrid(shipsGrid[player1],XY)):
-					breakNext=False
-					for X in range(len(shipsGrid[player1])):
-						if(breakNext):
-							break
-						for Y in range(len(shipsGrid[player1][X])):
-							if(shipsGrid[player1][X][Y]==XY):
-								shipsGrid[player1][X].pop(Y)
-								if(len(shipsGrid[player1][X])==0):
-									print("Your "+repr(shipName[X])+", has sunk.")
-								breakNext=True
+					queuedBreak = False
+					for i, shipCells in enumerate(shipsGrid[player1]):
+						if queuedBreak: break
+						for location in shipCells:
+							if(location==XY):
+								shipCells.remove(location)
+								if(len(shipCells)==0):
+									addHistory("sunk your "+str(shipName[i]))
+								queuedBreak = True
 								break
 				else:
 					raise GameError("Hit location not found in shipsGrid")
 				if(not(inGrid(defenseGrid[player1],ship))):
-					print("Your enemy won in "+str(turnCount+1)+" turns. Better luck next time!")
+					printLoc('\033[J',0,17)
+					printLoc("You lost in "+str(turnCount+1)+" turns!",(80-len("You lost in "+str(turnCount+1)+" turns!"))//2,18)
 					game=False
 				if(attackX>0 and defenseGrid[player1][attackX-1][attackY]%2==0):
 					queueGrid[player2][attackX-1][attackY] = 1
