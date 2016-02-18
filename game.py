@@ -162,6 +162,7 @@ def addShip(x,y,direction,length,player):
 class GameError(Exception):
 	def __init__(self, errorName='unknown'):
 		self.errorName = errorName
+		updateScreen()
 	def __str__(self):
 		return str(self.errorName[:1].upper()+self.errorName[1:])
 updateScreen()
@@ -194,8 +195,8 @@ while(recurseList(defenseGrid[player2], ship)<sum(shipLength)):
 game=True
 turnCount=0
 while(game):
+	updateScreen()
 	if(turnCount%2==0):
-		updateScreen()
 		result = parseInput(getInput("Attack a cell",'attack'),seperator,xFilter,yFilter)
 		if(result):
 			attackX,attackY,prettyX = int(ord(result[0].upper())-65),int(result[1]),result[0]
@@ -205,7 +206,6 @@ while(game):
 			elif(attackCellAlreadyAttacked):
 				addHistory("attack wasted")
 			else:
-				updateScreen()
 				if(defenseGrid[player2][attackX][attackY]==miss):
 					addHistory(str(prettyX)+str(attackY)+" miss")
 				elif(defenseGrid[player2][attackX][attackY]==hit):
@@ -246,7 +246,6 @@ while(game):
 					break
 		atackMessage=attackCell(attackX, attackY, player1)
 		if(attackMessage!='retry'):
-			updateScreen()
 			queueGrid[player2][attackX][attackY]=0
 			if(defenseGrid[player1][attackX][attackY]==miss):
 				addHistory(str(chr(attackX+65))+str(attackY)+" miss")
