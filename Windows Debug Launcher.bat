@@ -1,3 +1,3 @@
 cls
-python battleship.py
+python game.py
 pause
