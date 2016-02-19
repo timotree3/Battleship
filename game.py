@@ -1,6 +1,7 @@
 from random import randint
 from time import sleep
 from itertools import accumulate
+from shutil import get_terminal_size
 import os
 import re
 global inGrid,printLoc
@@ -15,10 +16,13 @@ red  = '\033[1;31m'#bold red for hits
 reset = '\033[0m'#end color formatting and return to normal
 green = '\033[32m'#green for user prompts
 yellow = '\033[0;33m'#yellow for ship
+global seperator,xFilter,yFilter,dirFilter
 seperator = lambda txt:re.split(r'[, |.;/+\\-]+',txt)
 xFilter = lambda txt:re.fullmatch(r'[A-J]',txt,re.I)
 yFilter = lambda txt:re.fullmatch(r'[0-9]',txt)
 dirFilter = lambda txt:re.fullmatch(r'(?:[urdl]|up|right|down|left)',txt,re.I)
+global screenWidth,screenHeight
+screenWidth,screenHeight = (get_terminal_size()[0]//20)*20,get_terminal_size()[1]
 global examples
 examples = {'ship':'A 0 Down | A,0,D | a,0 DoWN','attack':'A,0 | 0,a | a 0',None:'No example found'}
 global history,oldScreen
@@ -47,12 +51,11 @@ global queueGrid,defenseGrid,shipsGrid
 defenseGrid,queueGrid = [[[[0 for y in range(gridSize)] for x in range(gridSize)] for team in range(2)] for i in range(2)]
 shipsGrid = [[],[]]
 def addHistory(*args):
-	from shutil import get_terminal_size
-	centerAlign = lambda text:(80//2)-len(text)//2
+	centerAlign = lambda text:(screenWidth//2)-len(text)//2
 	for arg in args:
 		history.append(arg)
 	y=20
-	maxLength = (get_terminal_size()[1]-1)-y
+	maxLength = (screenHeight-1)-y
 	printLoc('\033[2K'+green+"History:",centerAlign('History:'),y)
 	for element in reversed(history[-maxLength:]):
 		y+=1
@@ -97,36 +100,37 @@ def recurseList(array,value,func=lambda a, b: a.count(b),func2=lambda a, b, c, d
 	return result
 def updateScreen(screen=None):
 	if(not(screen)):
-		screen=[defenseGrid[player2],defenseGrid[player1],"Map of Enemy Fleet","Map of YOUR Fleet"]
+		screen=[defenseGrid[player2],defenseGrid[player1],"Enemy Fleet","YOUR Fleet"]
 	global refreshCount
 	leftGrid,rightGrid,leftTitle,rightTitle = screen[0],screen[1],screen[2],screen[3]
 	title="===TimoTree Battleship==="
 	ruler="A B C D E F G H I J"
 	legendTitle,legendEmpty,legendMiss,legendShip,legendHit="Symbol Key:",cell[empty]+" - Empty",cell[miss]+" - Miss",cell[ship]+" - Ship",cell[hit]+" - Hit"
-	leftAlign = lambda text,hidden=0:(80//4)-(len(text)-hidden)//2
-	centerAlign = lambda text,hidden=0:(80//2)-(len(text)-hidden)//2
-	rightAlign = lambda text,hidden=0:(80*3)//4-(len(text)-hidden)//2
+	leftAlign = lambda text,hidden=0:(screenWidth//4)-(len(text)-hidden)//2
+	centerAlign = lambda text,hidden=0:(screenWidth//2)-(len(text)-hidden)//2
+	rightAlign = lambda text,hidden=0:(screenWidth*3)//4-(len(text)-hidden)//2
+	leftX,rightX = (screenWidth//4)-(11*2//2),(screenWidth*3//4)-(11*2//2)
 	if(refreshCount == 0):
 		cls()
 		printLoc(white+title,centerAlign(title),2)
 		printLoc(white+leftTitle,leftAlign(leftTitle),4)
 		printLoc(white+rightTitle,rightAlign(rightTitle),4)
-		printLoc(whiteDim+ruler,leftAlign(ruler),6)
-		printLoc(whiteDim+ruler,rightAlign(ruler),6)
+		printLoc(whiteDim+ruler,leftX+2,6)
+		printLoc(whiteDim+ruler,rightX+2,6)
 		printLoc(whiteDim+legendTitle,centerAlign(legendTitle),7)
 		printLoc(legendEmpty,centerAlign(legendEmpty,7),8)
 		printLoc(legendMiss,centerAlign(legendMiss,7),9)
 		printLoc(legendShip,centerAlign(legendShip,7),10)
 		printLoc(legendHit,centerAlign(legendHit,7)-1,11)
 	for y in range(gridSize):
-		printLoc(whiteDim+str(y),9,7+y)
-		printLoc(whiteDim+str(y),49,7+y)
+		printLoc(whiteDim+str(y),leftX,7+y)
+		printLoc(whiteDim+str(y),rightX,7+y)
 		for x in range(gridSize):
 			if(leftGrid[x][y]==ship):
-				printLoc(cell[empty],11+x*2,7+y)
+				printLoc(cell[empty],leftX+(x+1)*2,7+y)
 			else:
-				printLoc(cell[leftGrid[x][y]],11+x*2,7+y)
-			printLoc(cell[rightGrid[x][y]],51+x*2,7+y)
+				printLoc(cell[leftGrid[x][y]],leftX+(x+1)*2,7+y)
+			printLoc(cell[rightGrid[x][y]],rightX+(x+1)*2,7+y)
 	refreshCount += 1
 def getInput(prompt,example=None,hidden=0):
 	printLoc('\033[2K'+green+str(prompt),0,18)
@@ -165,9 +169,10 @@ class GameError(Exception):
 		updateScreen()
 	def __str__(self):
 		return str(self.errorName[:1].upper()+self.errorName[1:])
-updateScreen()
 addHistory()
 while(recurseList(defenseGrid[player1], ship)<sum(shipLength)):
+	updateScreen()
+	sleep(0.75)
 	for shipInfo in ships:
 		if(shipInfo[2]==recurseList(defenseGrid[player1], ship)):
 			break
@@ -183,7 +188,6 @@ while(recurseList(defenseGrid[player1], ship)<sum(shipLength)):
 			addHistory("location out of bounds")
 	else:
 		addHistory("invalid ship location")
-	updateScreen()
 while(recurseList(defenseGrid[player2], ship)<sum(shipLength)):
 	for shipInfo in ships:
 		if(shipInfo[2]==recurseList(defenseGrid[player2], ship)):
@@ -196,6 +200,7 @@ game=True
 turnCount=0
 while(game):
 	updateScreen()
+	sleep(0.75)
 	if(turnCount%2==0):
 		result = parseInput(getInput("Attack a cell",'attack'),seperator,xFilter,yFilter)
 		if(result):
