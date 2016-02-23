@@ -249,6 +249,7 @@ while(game):
 				poppedShip = popShip(attackX,attackY,player1)
 				if(type(poppedShip) == tuple):
 					history.append("sunk your "+str(poppedShip[0]))
+					sunkShip = True
 				elif(poppedShip==False):
 					raise GameError('Ship not found in shipsGrid')
 				if(not(inGrid(defenseGrid[player1],ship))):
