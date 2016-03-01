@@ -19,81 +19,34 @@ dirFilter = lambda txt:re.fullmatch(r'(?:[urdl]|up|right|down|left)', txt, re.I)
 screenWidth, screenHeight = get_terminal_size()
 screenWidth = (screenWidth//8)*8
 examples = {'ship':'A 0 Down | A, 0, D | a, 0 DoWN', 'attack':'A, 0 | 0, a | a 0', None:'No example found'}
-history = ["game started"]
+history = []
 refresh = True
 global shipName, shipLength, ships
-shipName = ("patrol boat", 'cruiser', "submarine", 'battleship', "aircraft carrier")#CONST
-shipLength = (2, 3, 3, 4, 5)#CONST
+shipName = ("patrol boat", 'cruiser', "submarine", 'battleship', "aircraft carrier")
+shipLength = (2, 3, 3, 4, 5)
 ships = tuple(zip(shipName, shipLength, [0]+list(accumulate(shipLength))))
 global empty, miss, ship, hit, cell
-empty, miss, ship, hit = 0, 1, 2, 3#CONST
-cell = {empty:cyan+'~', miss:whiteBright+'O', ship:yellow+'#', hit:red+'X'}#CONST
+empty, miss, ship, hit = 0, 1, 2, 3
+cell = {empty:cyan+'~', miss:whiteBright+'O', ship:yellow+'#', hit:red+'X'}
 global up, right, down, left
-up, right, down, left = 0, 1, 2, 3#CONST
+up, right, down, left = 0, 1, 2, 3
 global player1, player2
-player1, player2 = 0, 1#CONST
+player1, player2 = 0, 1
 global gridSize, grid
-gridSize = 10#CONST
+gridSize = 10
 grid = range(gridSize)
-attackSameCell = False#CONST
+attackSameCell = False
 global queueGrid, defenseGrid, shipsGrid
 defenseGrid = [[[0 for y in grid] for x in grid] for team in range(2)]
 shipsGrid, queueGrid = [[], []], [[], []]
 global inGrid, printLoc
 inGrid = lambda array, value: recurseList(array, value, lambda array2, value2: value2 in array2, maximum = 1)>0#Returns boolean
-printLoc = lambda text, x, y:print('\033['+str(y)+';'+str(x)+'H'+text+reset)
-def parseInput(text, preparation, *filters):
-	from itertools import permutations
-	prepared = preparation(text)
-	found = False
-	for inputLength in range(len(filters), len(prepared)+1):
-		for combo in permutations(prepared[:inputLength]):
-			match = [None for i in range(len(filters))]
-			for i, Filter in enumerate(filters):
-				if(Filter(combo[i])):
-					match[i] = combo[i]
-			if(None not in match):
-				found = True
-				break
-		if(found):
-			return match
-	return False
-def cls(title = ""):
-	from os import name, system
-	print('\033[s\033[2J')
-	system('cls' if name == 'nt' else 'clear')
-	print('\033[u')
-def attackCell(attackX, attackY, player):
-	if(attackX in grid and attackY in grid):
-		if(defenseGrid[player][attackX][attackY]%2>0):
-			return('retry')
-		else:
-			defenseGrid[player][attackX][attackY]+=1
-			return('success')
-	else:
-		return('out')
-def recurseList(array, value, func = lambda a, b: a.count(b), func2 = lambda a, b, c, d, e, f:a+recurseList(b, c, d, e, f), maximum = None):
-	result = func(array, value)
-	for element in array:
-		if(not(maximum) or result<maximum):
-			if(type(element) == list):
-				result = func2(result, element, value, func, func2, maximum)
-		else:
-			return maximum
-	return result
-def popShip(x, y, player):
-	for shipCells in shipsGrid[player]:
-		if((x, y) in shipCells):
-			shipCells.remove((x, y))
-			if(not(shipCells)):
-				return ships[shipsGrid[player].index(shipCells)]
-			return True
-	return None
+printLoc = lambda text, x, y:print('\033[{y};{x}H{text}'.format(y = y, x = x,text = text)+reset)
 def updateScreen():
 	leftGrid, rightGrid, leftTitle, rightTitle = defenseGrid[player2], defenseGrid[player1], "Enemy Fleet", "YOUR Fleet"
 	title = "=== TimoTree Battleship ==="
 	ruler = "A B C D E F G H I J"
-	legendTitle, legendEmpty, legendMiss, legendShip, legendHit = "Symbol Key:", cell[empty]+" - Empty", cell[miss]+" - Miss", cell[ship]+" - Ship", cell[hit]+" - Hit"
+	legendTitle, legendEmpty, legendMiss, legendShip, legendHit = "Legend:", cell[empty]+" - Empty", cell[miss]+" - Miss", cell[ship]+" - Ship", cell[hit]+" - Hit"
 	histName = "History:"
 	global screenWidth, screenHeight, history, refresh
 	b4Width, b4Height, screenWidth, screenHeight = screenWidth, screenHeight, *get_terminal_size()
@@ -109,7 +62,10 @@ def updateScreen():
 	rightAlign = lambda text, hidden = 0:screenWidth*3//4-(len(text)-hidden)//2
 	leftX, rightX = screenWidth//4-11, screenWidth*3//4-11
 	if(refresh):
-		cls()
+		from os import name, system
+		print('\033[s\033[2J')
+		system('cls' if name == 'nt' else 'clear')
+		print('\033[u')
 		printLoc(white+title, centerAlign(title), 2)
 		printLoc(white+leftTitle, leftAlign(leftTitle), 4)
 		printLoc(white+rightTitle, rightAlign(rightTitle), 4)
@@ -126,18 +82,87 @@ def updateScreen():
 		for x in grid:
 			printLoc(cell[{ship:empty}.get(leftGrid[x][y], leftGrid[x][y])], leftX+(x+1)*2, 7+y)
 			printLoc(cell[rightGrid[x][y]], rightX+(x+1)*2, 7+y)
-	printLoc('\033[2K'+green+histName, centerAlign(histName), 20)
-	for y, action in zip(range(21, screenHeight), reversed(history[-(screenHeight):])):
-		printLoc('\033[2K'+green+action.title()+'.', centerAlign(action+'.'), y)
+	printLoc('\033[2K{color}{title}'.format(color = green, title = histName), centerAlign(histName), 21)
+	for y, action in zip(range(22, screenHeight), reversed(history[-(screenHeight):])):
+		printLoc('\033[2K{color}{action}.'.format(color = green, action = action.title()), centerAlign(action+'.'), y)
 	refresh = False
 def getInput(prompt, example = None, hidden = 0):
-	global examples
-	printLoc('\033[2K'+green+str(prompt), 0, 18)
-	printLoc('\033[2K'+green+'Example(s): ('+examples[example]+')', 0, 19)
-	answer = input("\033[18;"+str(len(prompt)+2-hidden)+"H"+reset)
-	printLoc('\033[2K', 0, 18)
-	printLoc('\033[2K', 0, 19)
+	global examples, inputMessage
+	printLoc('\033[2K{color}{message}.'.format(color = green, message = inputMessage[0].upper()+inputMessage[1:]), 0, 18)
+	printLoc('\033[2K{color}{prompt}{color}:'.format(color = green, prompt = prompt), 0, 19)
+	printLoc('\033[2K{color}Example(s): ({examples})'.format(color = green, examples = examples[example]), 0, 20)
+	answer = input("\033[19;{x}H".format(x = len(prompt)+3-hidden)+reset)
+	printLoc('\033[2K\n'*3, 0, 18)
 	return answer.strip()
+def parseInput(text, preparation, *filters):
+	from itertools import permutations
+	prepared = preparation(text)
+	found = False
+	for inputLength in range(len(filters), len(prepared)+1):
+		for combo in permutations(prepared[:inputLength]):
+			match = [None for i in range(len(filters))]
+			for i, Filter in enumerate(filters):
+				if(Filter(combo[i])):
+					match[i] = combo[i]
+			if(None not in match):
+				found = True
+				break
+		if(found):
+			return match
+	return False
+def offensiveTurn(x,y,player,queue=False,random=False):
+	enemy = abs(player-1)
+	while(random or queue):
+		if(queue and len(queueGrid[player]) > 0):
+			x, y = queueGrid[player][randint(0, len(queueGrid[player])-1)]
+		elif(random):
+			x, y = randint(min(grid),max(grid)),randint(min(grid),max(grid))
+		else:
+			break
+		if(inGrid(queueGrid[player], (x, y))):
+			queueGrid[player].remove((x, y))
+		if(defenseGrid[enemy][x][y]%2 == 0):
+			break
+	if(x in grid and y in grid):
+		try:
+			defenseGrid[enemy][x][y] = {empty:miss,ship:hit}[defenseGrid[enemy][x][y]]
+		except KeyError:
+			return(('occupied', x, y))
+	else:
+		return(('out', x, y))
+	if(defenseGrid[enemy][x][y] == miss):
+		return(('miss', x, y))
+	elif(defenseGrid[enemy][x][y] == hit):
+		sunk = None
+		for i, shipCells in enumerate(shipsGrid[enemy]):
+			if((x, y) in shipCells):
+				shipCells.remove((x, y))
+				if(len(shipCells) == 0):
+					sunk = i
+				break
+		else:
+			raise GameError('ship not found in shipsGrid')
+		for queueX in [x-1, x+1]:
+			for queueY in [y-1, y+1]:
+				if(queueX in grid and queueY in grid and (queueX, queueY) in queueGrid[player]):
+					queueGrid[player].remove((queueX, queueY))
+		if(sunk):
+			return((sunk,x,y))
+		for direction in [x, y]:
+			for coord in [direction-1, direction+1]:
+				queueX, queueY = (coord, y) if direction == x else (x, coord)
+				if(defenseGrid[enemy][queueX][queueY]%2 == 0 and queueX in grid and queueY in grid):
+					queueGrid[player].append((queueX, queueY))
+		return(('hit', x, y))
+def recurseList(array, value, func = lambda a, b: a.count(b), maximum = None):
+	result = func(array, value)
+	for element in array:
+		if(not(maximum) or result<maximum):
+			if(type(element) == list):
+				result += recurseList(element, value, func, maximum)
+		else:
+			return maximum
+	return result
 def addShip(x, y, direction, length, player):
 	placementQueue = []
 	beforeCount = recurseList(defenseGrid[player], ship)
@@ -167,14 +192,15 @@ class GameError(Exception):
 		self.errorName = errorName
 		updateScreen()
 	def __str__(self):
-		return str(self.errorName[:1].upper()+self.errorName[1:])
+		return(str(self.errorName[0].upper()+self.errorName[1:]))
+inputMessage = "game started"
 while(recurseList(defenseGrid[player1], ship)<sum(shipLength)):
 	updateScreen()
-	sleep(0.75)
 	for shipInfo in ships:
 		if(shipInfo[2] == recurseList(defenseGrid[player1], ship)):
 			break
-	result = getInput("Place your "+str(shipInfo[0])+(' '+cell[ship])*shipInfo[1], 'ship', 7*shipInfo[1])
+	result = getInput("Place your {name}{preview}".format(name = shipInfo[0], preview = (' '+cell[ship])*shipInfo[1]), 'ship', 7*shipInfo[1])
+	inputMessage = "setting up board"
 	if(result == 'dev' and ships.index(shipInfo) == 0):
 		for i, x in enumerate(range(0, gridSize, 2)):
 			addShip(x, 0, down, shipLength[i], player1)
@@ -187,11 +213,11 @@ while(recurseList(defenseGrid[player1], ship)<sum(shipLength)):
 		if(shipMessage == 'success'):
 			history.append("placed at "+prettyX+str(shipY))
 		elif(shipMessage == 'occupied'):
-			history.append("location already filled")
+			inputMessage = "location already filled"
 		elif(shipMessage == 'out'):
-			history.append("location out of bounds")
+			inputMessage = "location out of bounds"
 	else:
-		history.append("invalid ship location")
+		inputMessage = "invalid ship location"
 while(recurseList(defenseGrid[player2], ship)<sum(shipLength)):
 	for shipInfo in ships:
 		if(shipInfo[2] == recurseList(defenseGrid[player2], ship)):
@@ -200,71 +226,37 @@ while(recurseList(defenseGrid[player2], ship)<sum(shipLength)):
 	shipY = randint(0, gridSize-1)
 	direction = randint(up, left)
 	addShip(shipX, shipY, direction, shipInfo[1], player2)
-game = True
 turnCount = 0
-while(game):
+inputMessage = "you are now attacking"
+while(True):
 	updateScreen()
-	sleep(0.75)
 	if(turnCount%2 == 0):
 		result = parseInput(getInput("Attack a cell", 'attack'), seperator, xFilter, yFilter)
+		inputMessage = "it is your turn"
 		if(result):
 			attackX, attackY, prettyX = int(ord(result[0].upper())-65), int(result[1]), result[0]
-			attackMessage = attackCell(attackX, attackY, player2)
-			if(attackMessage == 'retry'):
-				if(attackSameCell):
-					history.append("attack wasted")
-				else:
-					history.append("cell already attacked")
-			else:
-				if(defenseGrid[player2][attackX][attackY] == miss):
-					history.append(str(prettyX)+str(attackY)+" miss")
-				elif(defenseGrid[player2][attackX][attackY] == hit):
-					history.append(str(prettyX)+str(attackY)+" hit")
-					poppedShip = popShip(attackX, attackY, player2)
-					if(type(poppedShip) == tuple):
-						history.append("sunk enemy "+str(poppedShip[0]))
-					elif(poppedShip == False):
-						raise GameError('Ship not found in shipsGrid')
-					if(not(inGrid(defenseGrid[player2], ship))):
-						printLoc('\033[J', 0, 17)
-						printLoc("You won in "+str(turnCount)+" turns!", (screenWidth-len("You won in "+str(turnCount)+" turns!"))//2, 18)
-						game = False
-				turnCount+=1
+			turnMessage = offensiveTurn(attackX, attackY, player1)[0]
+			status, player = 'won', player1
 		else:
-			history.append("invalid attack location")
+			inputMessage = "invalid input"
+			continue
 	else:
-		if(queueGrid[player2]):
-			attackX, attackY = queueGrid[player2][randint(0, len(queueGrid[player2])-1)]
+		sleep(0.75)
+		turnMessage, attackX, attackY = offensiveTurn(0, 0, player2, queue = True, random = True)
+		prettyX = chr(attackX+65)
+		status, player = 'lost', player2
+	if(turnMessage == 'out'):
+		raise GameError("location out of bounds")
+	elif(not(turnMessage == 'occupied' and attackSameCell == False)):
+		turnCount += 1
+		if(turnMessage == 'occupied' and attackSameCell):
+			inputMessage = "turn wasted on already attacked cell"
+			turnMessage = 'wasted'
+		if(type(turnMessage) == int):
+			history.append("{x}{y} sunk {name}".format(x = prettyX, y = attackY, name = ships[turnMessage][0]))
+			if(not(inGrid(defenseGrid[player], ship))):
+				printLoc('\033[J', 0, 17)
+				printLoc("You {status} in {turns} turns!".format(status = status, turns = turnCount//2), (screenWidth-len("You {status} in {turns} turns!".format(status = status, turns = turnCount//2)))//2, 18)
+				break
 		else:
-			attackX = randint(0, gridSize-1)
-			attackY = randint(0, gridSize-1)
-		attackMessage = attackCell(attackX, attackY, player1)
-		while(inGrid(queueGrid[player2], (attackX, attackY))):
-			queueGrid[player2].remove((attackX, attackY))
-		if(attackMessage == 'success'):
-			if(defenseGrid[player1][attackX][attackY] == miss):
-				history.append(str(chr(attackX+65))+str(attackY)+" miss")
-			elif(defenseGrid[player1][attackX][attackY] == hit):
-				addQueue = True
-				history.append(str(chr(attackX+65))+str(attackY)+" hit")
-				poppedShip = popShip(attackX, attackY, player1)
-				if(type(poppedShip) == tuple):
-					history.append("sunk your "+str(poppedShip[0]))
-					addQueue = False
-				elif(poppedShip == False):
-					raise GameError('Ship not found in shipsGrid')
-				if(not(inGrid(defenseGrid[player1], ship))):
-					printLoc('\033[J', 0, 17)
-					printLoc("You lost in "+str(turnCount+1)+" turns!", (screenWidth-len("You lost in "+str(turnCount+1)+" turns!"))//2, 18)
-					game = False
-				for x in [attackX-1, attackX+1]:
-					for y in [attackY-1, attackY+1]:
-						if(x in grid and y in grid and (x, y) in queueGrid[player2]):
-							queueGrid[player2].remove((x, y))
-				if(addQueue):
-					for direction in [attackX, attackY]:
-						for coord in [direction-1, direction+1]:
-							x, y = (coord, attackY) if direction == attackX else (attackX, coord)
-							if(x in grid and y in grid and defenseGrid[player1][x][y]%2 == 0):
-								queueGrid[player2].append((x, y))
-			turnCount+=1
+			history.append("{x}{y} {action}".format(x = prettyX, y = attackY, action = turnMessage))
