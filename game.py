@@ -13,7 +13,7 @@ reset = '\033[0m'#end color formatting and return to normal
 green = '\033[32m'#green for user prompts
 yellow = '\033[0;33m'#yellow for ship
 seperator = lambda txt:re.split(r'[, |.;/+\\\t-]+', txt)
-xFilter = lambda txt:re.fullmatch(r'[A-J]', txt, re.I)
+xFilter = lambda txt:re.fullmatch(r'[A-Z]', txt, re.I)
 yFilter = lambda txt:re.fullmatch(r'[0-9]', txt)
 dirFilter = lambda txt:re.fullmatch(r'(?:[urdl]|up|right|down|left)', txt, re.I)
 screenWidth, screenHeight = get_terminal_size()
@@ -142,14 +142,14 @@ def offensiveTurn(x,y,player,queue=False,random=False):
 				break
 		else:
 			raise GameError('ship not found in shipsGrid')
-		for queueX in [x-1, x+1]:
-			for queueY in [y-1, y+1]:
+		for queueX in (x-1, x+1):
+			for queueY in (y-1, y+1):
 				if(queueX in grid and queueY in grid and (queueX, queueY) in queueGrid[player]):
 					queueGrid[player].remove((queueX, queueY))
 		if(sunk):
 			return((sunk,x,y))
-		for direction in [x, y]:
-			for coord in [direction-1, direction+1]:
+		for direction in (x, y):
+			for coord in (direction-1, direction+1):
 				queueX, queueY = (coord, y) if direction == x else (x, coord)
 				if(defenseGrid[enemy][queueX][queueY]%2 == 0 and queueX in grid and queueY in grid):
 					queueGrid[player].append((queueX, queueY))
