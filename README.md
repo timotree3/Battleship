@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/timotree3/battleship.png?label=ready&title=Ready)](https://waffle.io/timotree3/battleship)
 # ==TimoTree Battleship==
 ==My first battleship game. Written in Python.==
 
