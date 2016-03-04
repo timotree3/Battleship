@@ -148,8 +148,6 @@ def count(array, value, boolean = False):
 	if(result > 0 and boolean):
 		return(True)
 	for element in array:
-		if(maximum and result >= maximum):
-			return maximum
 		if(type(element) == list):
 			result += count(element, value, maximum)
 	return result
