@@ -137,7 +137,7 @@ def offensiveTurn(x,y,player,queue = False,random = False):
 			for queueY in (y - 1, y+1):
 				if(queueX in grid and queueY in grid and (queueX, queueY) in queueGrid[player]):
 					queueGrid[player].remove((queueX, queueY))
-		if(sunk):
+		if(sunk != None):
 			return (sunk, x, y)
 		for queueX, queueY in ((x - 1, y), (x+1, y), (x, y - 1), (x, y+1)):
 			if(queueX in grid and queueY in grid and defenseGrid[enemy][queueX][queueY] % 2 == 0):
@@ -236,6 +236,7 @@ while(True):
 			inputMessage = "turn wasted on already attacked cell"
 			turnMessage = 'wasted'
 		if(type(turnMessage) == int):
+			updateScreen()
 			history.append("{x}{y} sunk {name}".format(x = prettyX, y = attackY, name = ships[turnMessage][0]))
 			if(len(list(chain.from_iterable(shipsGrid[enemy]))) == 0):
 				printLoc('\033[J', 0, 17)
