@@ -29,7 +29,7 @@ xFilter = (lambda txt:re.fullmatch(r'[A-Z]+', txt, re.I), lambda txt: txt.upper(
 yFilter = (lambda txt:re.fullmatch(r'[0-9]+', txt), lambda txt: int(txt))
 dirFilter = (lambda txt:re.fullmatch(r'(?:[urdl]|up|right|down|left)', txt, re.I), lambda txt: txt.upper()[0])
 screenWidth, screenHeight = get_terminal_size()
-examples = {'ship':"A 0 Down | A, 0, D | a, 0 DoWN", 'attack':"A, 0 | 0, a | a 0", None:"No example found"}
+examples = {'ship':("A 0 Down", "A, 0, D", "a, 0 DoWN"), 'attack':("A, 0", "0, a", "a 0")}
 refresh = True
 global queueGrid, defenseGrid, shipsGrid
 defenseGrid = [[[0 for y in grid] for x in grid] for team in range(2)]
@@ -37,7 +37,7 @@ shipsGrid, queueGrid = [[], []], [[], []]
 history = [('War', 'Declared', green)]
 global printLoc
 printLoc = lambda text, x, y:print('\033[{y};{x}H{text}'.format(y = y, x = x,text = text)+reset)
-column = lambda column: sum([(([chr(i + 65) for i in range(26)].index(val) + 1) * 26 ** i) for i,val in enumerate(reversed(column))])-1
+practicalX = lambda coord: sum([(([chr(i + 65) for i in range(26)].index(val.upper()) + 1) * 26 ** i) for i, val in enumerate(reversed(coord))])-1
 def round(num: float):
 	adder = 0
 	for digit in reversed(str(num)[str(num).index('.') + 1:]):
@@ -53,7 +53,7 @@ def updateScreen():
 	b4Width, b4Height, screenWidth, screenHeight = screenWidth, screenHeight, *get_terminal_size()
 	if(screenWidth<72 or screenHeight<24 or b4Width != screenWidth or b4Height != screenHeight):
 		if(screenWidth<72 or screenHeight<24):
-			printLoc("Please enlarge your screen", 0, 0)
+			printLoc("Please enlarge your terminal", 0, 0)
 		refresh = True
 		while(screenWidth<72 or screenHeight<24 or b4Width != screenWidth or b4Height != screenHeight):
 			b4Width, b4Height, screenWidth, screenHeight = screenWidth, screenHeight, *get_terminal_size()
@@ -84,11 +84,14 @@ def updateScreen():
 		message = '{}: {}'.format(place, action)
 		printLoc(color + message, align(message, 'm'), y)
 	refresh = False
-def getInput(prompt, example = None, hidden = 0):
+def getInput(prompt, example = None, queue = None, hidden = 0):
 	global examples, inputMessage
 	printLoc(inputMessage[1] + '{}.'.format(inputMessage[0].capitalize()), 0, 18)
 	printLoc(green + '{}{}:'.format(prompt, reset), 0, 19)
-	printLoc(green + 'Example(s): ({})'.format(examples[example]), 0, 20)
+	if(example in examples):
+		printLoc(green + 'Example input{1}: ({0})'.format(' | '.join(examples[example]), 's'[:len(example) - 1]), 0, 20)
+	if(queue):
+		printLoc('\033[2K' + green + 'Suggested move{1}: {0}'.format(', '.join(['{} {}'.format(chr(x + 65), y) for x, y in queue[-3:]]), 's'[:len(queue)]), 0, 20)
 	answer = input('\033[19;{}H'.format(len(prompt + ':  ') - hidden) + reset)
 	printLoc('\033[2K\n' * 3, 0, 18)
 	return answer.strip()
@@ -181,7 +184,7 @@ inputMessage = ("game started", green)
 while(len(shipsGrid[player1]) < len(ships)):
 	updateScreen()
 	shipInfo = ships[len(shipsGrid[player1])]
-	result = getInput("Place your {}{preview}".format(shipInfo[0], preview = (' '+cell[ship]) * shipInfo[1]), 'ship', 5 * shipInfo[1])
+	result = getInput("Place your {}{preview}".format(shipInfo[0], preview = (' '+cell[ship]) * shipInfo[1]), 'ship', hidden = 5 * shipInfo[1])
 	inputMessage = ("filling board", green)
 	if(result == 'dev' and len(shipsGrid[player1]) == 0):
 		for i, x in enumerate(range(0, gridSize, 2)):
@@ -190,7 +193,7 @@ while(len(shipsGrid[player1]) < len(ships)):
 		result = parseInput(result, seperator, xFilter, yFilter, dirFilter)
 		if(result):
 			prettyX, shipY, shipDir = result
-			shipX = column(prettyX)
+			shipX = practicalX(prettyX)
 			shipMessage = addShip(shipX, shipY, shipDir, shipInfo[1], player1)
 			if(shipMessage == 'success'):
 				history.append((prettyX + str(shipY), 'Ship Placed', yellow))
@@ -211,21 +214,21 @@ history = [("Ships", 'Placed', yellow)]
 while(True):
 	updateScreen()
 	if(turnCount % 2 == 0):
-		result = parseInput(getInput("Attack a cell", 'attack'), seperator, xFilter, yFilter)
-		inputMessage = ("it is your turn", green)
 		status, player, enemy = 'won', player1, player2
+		result = parseInput(getInput("Attack a cell", 'attack', queueGrid[player]), seperator, xFilter, yFilter)
+		inputMessage = ("it is your turn", green)
 		if(result):
 			prettyX, attackY = result
-			attackX = column(prettyX)
+			attackX = practicalX(prettyX)
 			turnMessage = offensiveTurn(attackX, attackY, player1)[0]
 		else:
 			inputMessage = ("invalid input", red)
 			continue
 	else:
 		sleep(0.75)
+		status, player, enemy = 'lost', player2, player1
 		turnMessage, attackX, attackY = offensiveTurn(0, 0, player2, queue = True, random = True)
 		prettyX = chr(attackX+65)
-		status, player, enemy = 'lost', player2, player1
 	if(turnMessage == 'out'):
 		inputMessage = ("location out of bounds", red)
 	elif(not(turnMessage == 'occupied' and attackSameCell == False)):
@@ -240,5 +243,5 @@ while(True):
 				printLoc('\033[J\n' + green + "You {} in {turns} turns!".format(status, turns = turnCount // 2).center(screenWidth - 1) + reset, 0, 17)
 				break
 		else:
-			history.append((prettyX + str(attackY), turnMessage.capitalize(), {'miss': white, 'hit': red}.get(turnMessage, yellow)))	
+			history.append((prettyX + str(attackY), turnMessage.capitalize(), {'miss': white, 'hit': red}.get(turnMessage, yellow)))
 input()
