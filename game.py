@@ -106,19 +106,19 @@ def parseInput(text, preparation, *filters):
 			if(None not in match):
 				return match
 	return False
-def offensiveTurn(x,y,player,queue = False,random = False):
+def offensiveTurn(player, x = 0, y = 0):
 	enemy = abs(player - 1)
-	while(random or queue):
-		if(queue and len(queueGrid[player]) > 0):
+	while(player):# if player is player1 bool(0) is False but if player is player2 bool(1) is true
+		if(queueGrid[player]):
 			x, y = queueGrid[player][randint(0, len(queueGrid[player]) - 1)]
-		elif(random):
-			x, y = randint(min(grid),max(grid)),randint(min(grid),max(grid))
 		else:
+			x, y = randint(min(grid),max(grid)),randint(min(grid),max(grid))
+		if(defenseGrid[enemy][x][y] % 2 == 0):
 			break
 		while((x, y) in queueGrid[player]):
 			queueGrid[player].remove((x, y))
-		if(defenseGrid[enemy][x][y] % 2 == 0):
-			break
+	while((x, y) in queueGrid[player]):
+		queueGrid[player].remove((x, y))
 	if(x not in grid or y not in grid):
 		return ('out', x, y)
 	try:
@@ -135,14 +135,14 @@ def offensiveTurn(x,y,player,queue = False,random = False):
 				if(len(shipCells) == 0):
 					sunk = i
 				break
-		for queueX in (x - 1, x+1):
-			for queueY in (y - 1, y+1):
+		for queueX in (x - 1, x + 1):
+			for queueY in (y - 1, y + 1):
 				if(queueX in grid and queueY in grid and (queueX, queueY) in queueGrid[player]):
 					queueGrid[player].remove((queueX, queueY))
 		if(sunk != None):
 			return (sunk, x, y)
-		for queueX, queueY in ((x - 1, y), (x+1, y), (x, y - 1), (x, y+1)):
-			if(queueX in grid and queueY in grid and defenseGrid[enemy][queueX][queueY] % 2 == 0):
+		for queueX, queueY in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
+			if(queueX in grid and queueY in grid and (queueX, queueY) not in queueGrid[player] and defenseGrid[enemy][queueX][queueY] % 2 == 0):
 				queueGrid[player].append((queueX, queueY))
 		return ('hit', x, y)
 def count(array, value, boolean = False):
@@ -220,14 +220,14 @@ while(True):
 		if(result):
 			prettyX, attackY = result
 			attackX = practicalX(prettyX)
-			turnMessage = offensiveTurn(attackX, attackY, player1)[0]
+			turnMessage = offensiveTurn(player1, attackX, attackY)[0]
 		else:
 			inputMessage = ("invalid input", red)
 			continue
 	else:
 		sleep(0.75)
 		status, player, enemy = 'lost', player2, player1
-		turnMessage, attackX, attackY = offensiveTurn(0, 0, player2, queue = True, random = True)
+		turnMessage, attackX, attackY = offensiveTurn(player2)
 		prettyX = chr(attackX+65)
 	if(turnMessage == 'out'):
 		inputMessage = ("location out of bounds", red)
