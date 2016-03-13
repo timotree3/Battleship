@@ -87,12 +87,11 @@ def updateScreen():
 def getInput(prompt, example = None, queue = None, hidden = 0):
 	global examples, inputMessage
 	printLoc(inputMessage[1] + '{}.'.format(inputMessage[0].capitalize()), 0, 18)
-	printLoc(green + '{}{}:'.format(prompt, reset), 0, 19)
 	if(example in examples):
 		printLoc(green + 'Example input{1}: ({0})'.format(' | '.join(examples[example]), 's'[:len(example) - 1]), 0, 20)
 	if(queue):
 		printLoc('\033[2K' + green + 'Suggested move{1}: {0}'.format(', '.join(['{} {}'.format(chr(x + 65), y) for x, y in queue[-3:]]), 's'[:len(queue)]), 0, 20)
-	answer = input('\033[19;{}H'.format(len(prompt + ':  ') - hidden) + reset)
+	answer = input(green + '\033[19;0H{}{}: '.format(prompt, reset))
 	printLoc('\033[2K\n' * 3, 0, 18)
 	return answer.strip()
 def parseInput(text, preparation, *filters):
@@ -107,8 +106,8 @@ def parseInput(text, preparation, *filters):
 				return match
 	return False
 def offensiveTurn(player, x = 0, y = 0):
-	enemy = abs(player - 1)
-	while(player):# if player is player1 bool(0) is False but if player is player2 bool(1) is true
+	enemy = int(not(player))
+	while(player == player2):
 		if(queueGrid[player]):
 			x, y = queueGrid[player][randint(0, len(queueGrid[player]) - 1)]
 		else:
@@ -155,10 +154,9 @@ def count(array, value, boolean = False):
 	return result
 def addShip(x, y, direction, length, player):
 	placementQueue = []
-	if(type(direction) == str):
-		direction = {'U':up, 'R':right, 'D':down, 'L':left}[direction]
-	step, direction = {up:( - 1, 1), right:(1, 0), down:(1, 1), left:( - 1, 0)}[direction]
-	xLength, yLength, xStep, yStep = [1, step * length, 1, step] if(direction) else [step * length, 1, step, 1]
+	directions = ('L', 'U', 'R', 'D') if type(direction) == str else (left, up, right, down)
+	step, axis = dict(zip(directions, ((-1, 'X'), (-1, 'Y'), (1, 'X'), (1, 'Y'))))[direction]
+	xLength, yLength, xStep, yStep = [1, step * length, 1, step] if axis == 'Y' else [step * length, 1, step, 1]
 	for xIter in range(x, x+xLength, xStep):
 		for yIter in range(y, y+yLength, yStep):
 			if(xIter in grid and yIter in grid):
