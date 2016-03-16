@@ -171,14 +171,14 @@ def addShip(x, y, direction, length, player):
 	for shipLoc in placementQueue:
 		x, y = int(shipLoc[0]), int(shipLoc[1])
 		defenseGrid[player][x][y] = ship
-		shipsGrid[player][ - 1].append((x, y))
+		shipsGrid[player][-1].append((x, y))
 	return 'success'
 class GameError(Exception):
-	def __init__(self, errorName = 'unknown'):
-		self.errorName = errorName
+	def __init__(self, name = 'unknown'):
+		self.name = name
 		updateScreen()
 	def __str__(self):
-		return(str(self.errorName[0].upper()+self.errorName[1:]))
+		return(str(self.name.capitalize()))
 inputMessage = ("game started", green)
 while(len(shipsGrid[player1]) < len(ships)):
 	updateScreen()
@@ -238,8 +238,7 @@ while(True):
 			updateScreen()
 			history.append((prettyX + str(attackY), "Sunk '{}'".format(ships[turnMessage][0].title()), yellow))
 			if(len(list(chain.from_iterable(shipsGrid[enemy]))) == 0):
-				printLoc('\033[J\n' + green + "You {} in {turns} turns!".format(status, turns = turnCount // 2).center(screenWidth - 1) + reset, 0, 17)
+				input('\033[17;0H\033[J\n' + green + "You {} in {turns} turns!".format(status, turns = turnCount // 2).center(screenWidth - 1) + reset + '\n')
 				break
 		else:
 			history.append((prettyX + str(attackY), turnMessage.capitalize(), {'miss':white, 'hit':red, 'wasted':cyan}.get(turnMessage, yellow)))
-input()
