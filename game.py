@@ -4,14 +4,15 @@ from itertools import chain
 from shutil import get_terminal_size
 import re
 global white, reset, green, yellow
-red = '\033[1;31m'
-green = '\033[32m'#UI elements
-yellow = '\033[33m'#Ships and History
-white = '\033[37m'#UI elements and Misses
-reset = '\033[m'#End coloring
+cyan = '\033[36m'#Empties
+white = '\033[37m'#UI and Misses
+yellow = '\033[33m'#Ships
+red = '\033[1;31m'#Hits
+green = '\033[32m'#UI
+reset = '\033[0m'#End coloring
 global empty, miss, ship, hit, cell
 empty, miss, ship, hit = 0, 1, 2, 3
-cell = {empty:'\033[36m' + '~', miss:white + 'O', ship:yellow + '#', hit:red + 'X'}
+cell = {empty:cyan + '~', miss:white + 'O', ship:yellow + '#', hit:red + 'X'}
 global up, right, down, left
 up, right, down, left = 0, 1, 2, 3
 global player1, player2
@@ -19,7 +20,7 @@ player1, player2 = 0, 1
 global gridSize, grid
 gridSize = 10
 grid = range(gridSize)
-attackSameCell = False
+wasteTurns = True
 global shipName, shipLength, ships
 shipName = ("patrol boat", 'cruiser', 'submarine', 'battleship', "aircraft carrier")
 shipLength = (2, 3, 3, 4, 5)
@@ -123,7 +124,7 @@ def offensiveTurn(player, x = 0, y = 0):
 	try:
 		defenseGrid[enemy][x][y] = {empty:miss,ship:hit}[defenseGrid[enemy][x][y]]
 	except KeyError:
-		return ('occupied', x, y)
+		return ('wasted', x, y)
 	if(defenseGrid[enemy][x][y] == miss):
 		return ('miss', x, y)
 	elif(defenseGrid[enemy][x][y] == hit):
@@ -227,13 +228,12 @@ while(True):
 		status, player, enemy = 'lost', player2, player1
 		turnMessage, attackX, attackY = offensiveTurn(player2)
 		prettyX = chr(attackX+65)
+	if(turnMessage == 'wasted'):
+		inputMessage = ("cell already attacked", red)
 	if(turnMessage == 'out'):
 		inputMessage = ("location out of bounds", red)
-	elif(not(turnMessage == 'occupied' and attackSameCell == False)):
+	elif(not(turnMessage == 'wasted') or wasteTurns):
 		turnCount += 1
-		if(turnMessage == 'occupied' and attackSameCell):
-			inputMessage = ("turn wasted on already attacked cell", red)
-			turnMessage = 'wasted'
 		if(type(turnMessage) == int):
 			updateScreen()
 			history.append((prettyX + str(attackY), "Sunk '{}'".format(ships[turnMessage][0].title()), yellow))
@@ -241,5 +241,5 @@ while(True):
 				printLoc('\033[J\n' + green + "You {} in {turns} turns!".format(status, turns = turnCount // 2).center(screenWidth - 1) + reset, 0, 17)
 				break
 		else:
-			history.append((prettyX + str(attackY), turnMessage.capitalize(), {'miss': white, 'hit': red}.get(turnMessage, yellow)))
+			history.append((prettyX + str(attackY), turnMessage.capitalize(), {'miss':white, 'hit':red, 'wasted':cyan}.get(turnMessage, yellow)))
 input()
