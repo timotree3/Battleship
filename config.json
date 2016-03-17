@@ -1,0 +1,27 @@
+{
+	"wasteTurns":false,
+	"gridSize":10,
+	"shipLength":[
+		2,
+		3,
+		3,
+		4,
+		5],
+	"shipName":[
+		"patrol boat",
+		"cruiser",
+		"submarine",
+		"battleship",
+		"aircraft carrier"
+	],
+	"colors":{
+		"empty":"cyan",
+		"miss":"white",
+		"ship":"yellow",
+		"hit":"red",
+		"success":"green",
+		"fail":"red",
+		"interface":"white",
+		"prompt":"green"
+	}
+}
