@@ -16,7 +16,7 @@ yFilter = (lambda txt:re.fullmatch(r'\d+', txt), lambda txt: int(txt))
 dirFilter = (lambda txt:re.fullmatch(r'(?:[urdl]|up|right|down|left)', txt, re.I), lambda txt: txt.upper()[0])
 screenWidth, screenHeight = get_terminal_size()
 examples = {'ship':("A 0 Down", "A, 0, D", "a, 0 DoWN"), 'attack':("A, 0", "0, a", "a 0")}
-refresh = True
+refresh, check = True, 'strict'
 global gridSize, shipName, shipLength, colors
 try:
 	for configurable in ('wasteTurns', 'gridSize', 'shipLength', 'shipName', 'colors'):
@@ -112,11 +112,32 @@ def offensiveTurn(player, x = 0, y = 0):
 		if(queueGrid[player]):
 			x, y = queueGrid[player][randint(0, len(queueGrid[player]) - 1)]
 		else:
-			x, y = randint(0, gridSize - 1), randint(0, gridSize - 1)
+			global check
+			if(check):
+				queue, misses = [], []
+				for y in grid:
+					for x in grid:
+						if(defenseGrid[enemy][x][y] % 2 == 0):
+							queue.append((x, y))
+						elif(defenseGrid[enemy][x][y] == miss):
+							misses.append((x, y))
+				for x, y in {'strict':misses, 'casual':queue}[check]:
+					for offset in range(1, min([shipLength[i] for i, shipList in enumerate(shipsGrid[enemy]) if len(shipList) > 0])):
+						if(check == 'strict'):
+							for checkX, checkY in ((x - offset, y), (x + offset, y), (x, y - offset), (x, y + offset)):
+								if((checkX, checkY) in queue):
+									queue.remove((checkX, checkY))
+						elif(check == 'casual'):
+							for checkX, checkY in ((x - offset, y), (x + offset, y), (x, y - offset), (x, y + offset)):
+								if(defenseGrid[enemy][checkX][checkY] != miss):
+									break
+							else:
+								queue.remove((x, y))
+				if(not(queue)):
+					check = ('strict', 'casual', None)[('strict', 'casual', None).index(check) + 1]
+			x, y = queue[0] if check else (randint(0, gridSize - 1), randint(0, gridSize - 1))
 		if(defenseGrid[enemy][x][y] % 2 == 0):
 			break
-		while((x, y) in queueGrid[player]):
-			queueGrid[player].remove((x, y))
 	while((x, y) in queueGrid[player]):
 		queueGrid[player].remove((x, y))
 	if(x not in grid or y not in grid):
@@ -180,8 +201,8 @@ while(len(shipsGrid[player1]) < len(ships)):
 	result = getInput("Place your {}{preview}".format(shipInfo[0], preview = (' '+cell[ship]) * shipInfo[1]), 'ship', hidden = 5 * shipInfo[1])
 	inputMessage = ("filling board", colors['success'])
 	if(result == 'dev' and len(shipsGrid[player1]) == 0):
-		for i, x in enumerate(range(0, gridSize, 2)):
-			addShip(x, 0, down, shipLength[i], player1)
+		for i, y in enumerate(range(0, gridSize, 2)):
+			addShip(0, y, right, shipLength[i], player1)
 	else:
 		result = parseInput(result, seperator, xFilter, yFilter, dirFilter)
 		if(result):
