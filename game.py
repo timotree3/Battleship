@@ -108,20 +108,20 @@ def parseInput(text, preparation, *filters):
 	return False
 def offensiveTurn(player, x = 0, y = 0):
 	enemy = int(not(player))
-	while(player == player2):
+	if(player == player2):
 		if(queueGrid[player]):
 			x, y = queueGrid[player][randint(0, len(queueGrid[player]) - 1)]
 		else:
 			global check
-			if(check):
-				queue, misses = [], []
+			while(check):
+				queue, invalids = [], []
 				for y in grid:
 					for x in grid:
 						if(defenseGrid[enemy][x][y] % 2 == 0):
 							queue.append((x, y))
-						elif(defenseGrid[enemy][x][y] == miss):
-							misses.append((x, y))
-				for x, y in {'strict':misses, 'casual':queue}[check]:
+						else:
+							invalids.append((x, y))
+				for x, y in {'strict':invalids, 'casual':queue}[check]:
 					for offset in range(1, min([shipLength[i] for i, shipList in enumerate(shipsGrid[enemy]) if len(shipList) > 0])):
 						if(check == 'strict'):
 							for checkX, checkY in ((x - offset, y), (x + offset, y), (x, y - offset), (x, y + offset)):
@@ -133,11 +133,13 @@ def offensiveTurn(player, x = 0, y = 0):
 									break
 							else:
 								queue.remove((x, y))
-				if(not(queue)):
+				if(queue):
+					x, y = queue[0]
+					break
+				else:
 					check = ('strict', 'casual', None)[('strict', 'casual', None).index(check) + 1]
-			x, y = queue[0] if check else (randint(0, gridSize - 1), randint(0, gridSize - 1))
-		if(defenseGrid[enemy][x][y] % 2 == 0):
-			break
+			else:
+				x, y = (randint(0, gridSize - 1), randint(0, gridSize - 1))
 	while((x, y) in queueGrid[player]):
 		queueGrid[player].remove((x, y))
 	if(x not in grid or y not in grid):
