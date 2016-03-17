@@ -135,7 +135,7 @@ def offensiveTurn(player, x = 0, y = 0):
 								if((x, y) in queue):
 									queue.remove((x, y))
 				if(queue):
-					x, y = queue[0]
+					x, y = queue[randint(0, len(queue) - 1)]
 					break
 				else:
 					check = ('strict', 'casual', None)[('strict', 'casual', None).index(check) + 1]
@@ -258,7 +258,7 @@ while(True):
 			updateScreen()
 			history.append((prettyX + str(attackY), "Sunk '{}'".format(ships[turnMessage][0].title()), colors['ship']))
 			if(len(list(chain.from_iterable(shipsGrid[enemy]))) == 0):
-				input('\033[{y};0H\033[J\n' + colors['interface'] + "You {} in {turns} turns!".format(status, turns = turnCount // 2, y = gridSize + 7).center(screenWidth - 1) + reset + '\n')
+				input("\033[{y};0H\033[J\n{color}You {} in {} turns!{}\n".format(status, turnCount // 2, reset, color = colors['interface'], y = gridSize + 7))
 				break
 		else:
 			history.append((prettyX + str(attackY), turnMessage.capitalize(), colors['empty'] if turnMessage == 'wasted' else colors[turnMessage]))
