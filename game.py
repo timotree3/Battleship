@@ -132,14 +132,17 @@ def offensiveTurn(player, x = 0, y = 0):
 								if(checkX in grid and checkY in grid and defenseGrid[enemy][checkX][checkY] != miss):
 									break
 							else:
-								queue.remove((x, y))
+								if((x, y) in queue):
+									queue.remove((x, y))
 				if(queue):
 					x, y = queue[0]
 					break
 				else:
 					check = ('strict', 'casual', None)[('strict', 'casual', None).index(check) + 1]
-			else:
+			while(not(check)):
 				x, y = (randint(0, gridSize - 1), randint(0, gridSize - 1))
+				if(defenseGrid[enemy][x][y] % 2 == 0):
+					break
 	while((x, y) in queueGrid[player]):
 		queueGrid[player].remove((x, y))
 	if(x not in grid or y not in grid):
@@ -255,7 +258,7 @@ while(True):
 			updateScreen()
 			history.append((prettyX + str(attackY), "Sunk '{}'".format(ships[turnMessage][0].title()), colors['ship']))
 			if(len(list(chain.from_iterable(shipsGrid[enemy]))) == 0):
-				input('\033[{y};0H\033[J\n' + colors['interface'] + "You {} in {turns} turns!".format(status, turns = turnCount // 2).center(screenWidth - 1) + reset + '\n', y = gridSize + 7)
+				input('\033[{y};0H\033[J\n' + colors['interface'] + "You {} in {turns} turns!".format(status, turns = turnCount // 2, y = gridSize + 7).center(screenWidth - 1) + reset + '\n')
 				break
 		else:
 			history.append((prettyX + str(attackY), turnMessage.capitalize(), colors['empty'] if turnMessage == 'wasted' else colors[turnMessage]))
