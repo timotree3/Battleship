@@ -29,3 +29,5 @@ Your Attacks:                         Computer's Attacks:          - Ocean
 ```
 
 Come play with us!
+##### Windows versions before Windows 10 require using a console emulator because they do not interpret colors correctly
+###### [Recommended console emulator](http://console.sourceforge.net/) (SourceForge link)
