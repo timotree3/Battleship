@@ -29,5 +29,4 @@ Your Attacks:                         Computer's Attacks:          - Ocean
 ```
 
 Come play with us!
-##### Windows versions before Windows 10 require using a console emulator because they do not interpret colors correctly
-###### [Recommended console emulator](http://console.sourceforge.net/) (SourceForge link)
+##### Windows versions before Windows 10 do not interpret colors and mouse movement codes correctly and might require a future patch.
