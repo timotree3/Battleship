@@ -110,7 +110,7 @@ def offensiveTurn(player, x = 0, y = 0):
 	enemy = int(not(player))
 	if(player == player2):
 		if(queueGrid[player]):
-			x, y = queueGrid[player][randint(0, len(queueGrid[player]) - 1)]
+			x, y = queueGrid[player].pop(randint(0, len(queueGrid[player]) - 1))
 		else:
 			global check
 			while(check):
@@ -143,7 +143,7 @@ def offensiveTurn(player, x = 0, y = 0):
 				x, y = (randint(0, gridSize - 1), randint(0, gridSize - 1))
 				if(defenseGrid[enemy][x][y] % 2 == 0):
 					break
-	if((x, y) in queueGrid[player]):
+	elif((x, y) in queueGrid[player]):
 		queueGrid[player].remove((x, y))
 	if(x not in grid or y not in grid):
 		return ('out', x, y)
