@@ -143,7 +143,7 @@ def offensiveTurn(player, x = 0, y = 0):
 				x, y = (randint(0, gridSize - 1), randint(0, gridSize - 1))
 				if(defenseGrid[enemy][x][y] % 2 == 0):
 					break
-	while((x, y) in queueGrid[player]):
+	if((x, y) in queueGrid[player]):
 		queueGrid[player].remove((x, y))
 	if(x not in grid or y not in grid):
 		return ('out', x, y)
@@ -151,9 +151,7 @@ def offensiveTurn(player, x = 0, y = 0):
 		defenseGrid[enemy][x][y] = {empty:miss,ship:hit}[defenseGrid[enemy][x][y]]
 	except KeyError:
 		return ('wasted', x, y)
-	if(defenseGrid[enemy][x][y] == miss):
-		return ('miss', x, y)
-	elif(defenseGrid[enemy][x][y] == hit):
+	if(defenseGrid[enemy][x][y] == hit):
 		sunk = None
 		for i, shipCells in enumerate(shipsGrid[enemy]):
 			if((x, y) in shipCells):
@@ -161,16 +159,21 @@ def offensiveTurn(player, x = 0, y = 0):
 				if(len(shipCells) == 0):
 					sunk = i
 				break
-		for queueX in (x - 1, x + 1):
-			for queueY in (y - 1, y + 1):
-				if(queueX in grid and queueY in grid and (queueX, queueY) in queueGrid[player]):
-					queueGrid[player].remove((queueX, queueY))
+		for x2 in (x - 1, x + 1):
+			for y2 in (y - 1, y + 1):
+				if(x2 in grid and y2 in grid and (x2, y2) in queueGrid[player]):
+					queueGrid[player].remove((x2, y2))
 		if(sunk != None):
 			return (sunk, x, y)
-		for queueX, queueY in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
-			if(queueX in grid and queueY in grid and (queueX, queueY) not in queueGrid[player] and defenseGrid[enemy][queueX][queueY] % 2 == 0):
-				queueGrid[player].append((queueX, queueY))
-		return ('hit', x, y)
+		firstHit, secondHit = [], []
+		for x2, y2 in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
+			if(x2 in grid and y2 in grid):
+				if(defenseGrid[enemy][x2][y2] % 2 == 0 and (x2, y2) not in queueGrid[player]):
+					firstHit.append((x2, y2))
+				if(defenseGrid[enemy][x2][y2] == hit and (x + (x - x2), y + (y - y2)) not in queueGrid[player]):
+					secondHit.append((x + (x - x2), y + (y - y2)))
+		queueGrid[player] += secondHit if secondHit else firstHit
+	return ({miss:'miss', hit:'hit'}[defenseGrid[enemy][x][y]], x, y)
 def count(array, value, boolean = False):
 	result = array.count(value)
 	if(result > 0 and boolean):
