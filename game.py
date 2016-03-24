@@ -11,27 +11,34 @@ up, right, down, left = 0, 1, 2, 3
 global player1, player2
 player1, player2 = 0, 1
 seperator = lambda txt:re.split(r'[, .|]+', txt)
-xFilter = (lambda txt:re.fullmatch(r'[A-Z]+', txt, re.I), lambda txt: txt.upper())
-yFilter = (lambda txt:re.fullmatch(r'\d+', txt), lambda txt: int(txt))
-dirFilter = (lambda txt:re.fullmatch(r'(?:[urdl]|up|right|down|left)', txt, re.I), lambda txt: txt.upper()[0])
+xFilter = (lambda txt:re.fullmatch(r'[A-Z]+', txt, re.I), lambda txt:txt.upper())
+yFilter = (lambda txt:re.fullmatch(r'\d+', txt), lambda txt:int(txt))
+dirFilter = (lambda txt:re.fullmatch(r'(?:[urdl]|up|right|down|left)', txt, re.I), lambda txt:txt.upper()[0])
+configurables = (("wasteTurns", lambda option:(type(option) == bool, option)),
+("gridSize", lambda option:(type(option) == int and int(option) > 0, option)),
+("shipLength", lambda option:(option and min(option) > 0, tuple(option))),
+("shipName", lambda option:(option, tuple([str(i) for i in option]))),
+("colors", lambda option:(type(option) == dict,
+dict([(key, '\033[3{}m'.format(('black', 'red', 'green', 'yellow', 'blue', 'purple', 'cyan', 'white').index(value))) for key, value in option.items()]))))
 screenWidth, screenHeight = get_terminal_size()
 examples = {'ship':("A 0 Down", "A, 0, D", "a, 0 DoWN"), 'attack':("A, 0", "0, a", "a 0")}
 refresh, check = True, 'strict'
 global gridSize, shipName, shipLength, colors
-try:
-	for configurable in ('wasteTurns', 'gridSize', 'shipLength', 'shipName', 'colors'):
-		locals()[configurable] = json.load(open("config.json"))[configurable]
-except TypeError:
-	raise Exception("Invalid config.json")
-if(gridSize < 1 or len(shipLength) < 1 or len(shipName) < 1 or min(shipLength) < 1 or max(shipLength) > gridSize or sum(shipLength) > gridSize ** 2):
-	raise Exception("Invalid values in config.json")
-for key, value in colors.items():
-	colors[key] = '\033[3{}m'.format(('black', 'red', 'green', 'yellow', 'blue', 'purple', 'cyan', 'white').index(value))
+config = json.load(open("config.json"))
+if(type(config) != dict):
+	raise Exception("config.json completely invalid")
+for configurable, test in configurables:
+	validity, value = test(config[configurable])
+	if(not(validity)):
+		raise Exception(configurable + " invalid.")
+	locals()[configurable] = value
+if(max(shipLength) > gridSize or sum(shipLength) > gridSize ** 2):
+	raise Exception("invalid shipLength and gridSize ratios.")
 global grid, ships, reset, cell
 grid = range(gridSize)
 ships = tuple(zip(shipName, shipLength))
 reset = '\033[0m'
-cell = {empty:colors['empty'] + '~', miss:colors['miss'] + 'O', ship:colors['ship'] + '#', hit:colors['hit'] + 'X'}
+cell = (colors['empty'] + '~', colors['miss'] + 'O', colors['ship'] + '#', colors['hit'] + 'X')
 global queueGrid, defenseGrid, shipsGrid
 defenseGrid = [[[0 for y in grid] for x in grid] for team in range(2)]
 shipsGrid, queueGrid = [[], []], [[], []]
@@ -48,7 +55,7 @@ def updateScreen():
 	leftGrid, rightGrid, leftTitle, rightTitle = defenseGrid[player2], defenseGrid[player1], "Enemy Fleet", "Your Fleet"
 	title = "=== TimoTree Battleship ==="
 	ruler = ' '.join([chr(i + 65) for i in range(gridSize)])
-	legend = {'title':'Legend:', empty:'Empty', miss:'Miss', ship:'Ship', hit:'Hit'}
+	legend = ('Empty', 'Miss', 'Ship', 'Hit', 'Legend:')
 	histName = 'History'
 	global screenWidth, screenHeight, history, refresh
 	b4Width, b4Height, screenWidth, screenHeight = screenWidth, screenHeight, *get_terminal_size()
@@ -60,7 +67,7 @@ def updateScreen():
 			b4Width, b4Height, screenWidth, screenHeight = screenWidth, screenHeight, *get_terminal_size()
 			sleep(0.1)
 	align = lambda text, alignment, hidden = 0:round(hidden + {'l':screenWidth / 4, 'm':screenWidth / 2, 'r':screenWidth * 3 / 4}[alignment] - (len(text) / 2))
-	leftX, legendX, rightX = screenWidth // 4 - (gridSize + 1), align(legend['title'], 'm') - 1, screenWidth * 3 // 4 - (gridSize + 1)
+	leftX, legendX, rightX = screenWidth // 4 - (gridSize + 1), align(legend[-1], 'm') - 1, screenWidth * 3 // 4 - (gridSize + 1)
 	if(refresh):
 		from os import name, system
 		print('\033[s\033[2J')
@@ -71,9 +78,9 @@ def updateScreen():
 		printLoc(colors['interface'] + rightTitle, align(rightTitle, 'r'), 4)
 		printLoc(colors['interface'] + ruler, leftX+2, 6)
 		printLoc(colors['interface'] + ruler, rightX+2, 6)
-		printLoc(colors['interface'] + legend['title'], legendX + 1, 7)
-		for i, cellType in enumerate(cell):
-			printLoc(cell[cellType] + " - " + legend[cellType], legendX, i + 8)
+		printLoc(colors['interface'] + legend[-1], legendX + 1, 7)
+		for i in range(len(cell)):
+			printLoc(cell[i] + " - " + legend[i], legendX, i + 8)
 	for y in grid:
 		printLoc(colors['interface'] + str(y), leftX, 7+y)
 		printLoc(colors['interface'] + str(y), rightX, 7+y)
@@ -173,7 +180,7 @@ def offensiveTurn(player, x = 0, y = 0):
 				if(defenseGrid[enemy][x2][y2] == hit and (x + (x - x2), y + (y - y2)) not in queueGrid[player]):
 					secondHit.append((x + (x - x2), y + (y - y2)))
 		queueGrid[player] += secondHit if secondHit else firstHit
-	return ({miss:'miss', hit:'hit'}[defenseGrid[enemy][x][y]], x, y)
+	return (('empty', 'miss', 'ship', 'hit')[defenseGrid[enemy][x][y]], x, y)
 def count(array, value, boolean = False):
 	result = array.count(value)
 	if(result > 0 and boolean):
