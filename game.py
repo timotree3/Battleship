@@ -5,8 +5,6 @@ from json import load as json
 import re
 global empty, miss, ship, hit
 empty, miss, ship, hit = 0, 1, 2, 3
-global up, right, down, left
-up, right, down, left = 0, 1, 2, 3
 global player1, player2
 player1, player2 = 0, 1
 seperator = lambda txt:re.split(r'[, .|]+', txt)
@@ -192,7 +190,7 @@ def count(array, value, boolean = False):
 	return result
 def addShip(x, y, direction, length, player):
 	placementQueue = []
-	step, axis = dict(zip(('L', 'U', 'R', 'D'), ((-1, 'X'), (-1, 'Y'), (1, 'X'), (1, 'Y'))))[direction]
+	step, axis = {'L': (-1, 'X'), 'U': (-1, 'Y'), 'R': (1, 'X'), 'D': (1, 'Y')}[direction]
 	xLength, yLength, xStep, yStep = [1, step * length, 1, step] if axis == 'Y' else [step * length, 1, step, 1]
 	for xIter in range(x, x+xLength, xStep):
 		for yIter in range(y, y+yLength, yStep):
@@ -217,7 +215,7 @@ while len(shipsGrid[player1]) < len(ships):
 	inputMessage = ("filling board", colors['success'])
 	if result == 'dev' and len(shipsGrid[player1]) == 0:
 		for i, y in enumerate(range(0, gridSize, 2)):
-			addShip(0, y, right, shipLength[i], player1)
+			addShip(0, y, 'R', shipLength[i], player1)
 	else:
 		result = parseInput(result, seperator, xFilter, yFilter, dirFilter)
 		if result:
