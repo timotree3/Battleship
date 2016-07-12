@@ -1,9 +1,8 @@
-from random import randint
 from time import sleep
 from itertools import chain
 from shutil import get_terminal_size
+from json import load as json
 import re
-import json
 global empty, miss, ship, hit
 empty, miss, ship, hit = 0, 1, 2, 3
 global up, right, down, left
@@ -24,7 +23,8 @@ screenWidth, screenHeight = get_terminal_size()
 examples = {'ship':("A 0 Down", "A, 0, D", "a, 0 DoWN"), 'attack':("A, 0", "0, a", "a 0")}
 refresh, check = True, 'strict'
 global gridSize, shipName, shipLength, colors
-config = json.load(open("config.json"))
+with open("config.json") as config:
+	config = json(config)
 if type(config) != dict:
 	raise Exception("config.json completely invalid")
 for configurable, test in configurables:
@@ -114,10 +114,11 @@ def parseInput(text, preparation, *filters):
 				return match
 	return False
 def offensiveTurn(player, x = 0, y = 0):
+	from random import choice, randrange
 	enemy = int(not(player))
 	if player == player2:
 		if queueGrid[player]:
-			x, y = queueGrid[player].pop(randint(0, len(queueGrid[player]) - 1))
+			x, y = queueGrid[player].pop(randrange(len(queueGrid[player])))
 		else:
 			global check
 			while check:
@@ -142,12 +143,12 @@ def offensiveTurn(player, x = 0, y = 0):
 								if (x, y) in queue:
 									queue.remove((x, y))
 				if queue:
-					x, y = queue[randint(0, len(queue) - 1)]
+					x, y = choice(queue)
 					break
 				else:
 					check = ('strict', 'casual', None)[('strict', 'casual', None).index(check) + 1]
 			while not(check):
-				x, y = (randint(0, gridSize - 1), randint(0, gridSize - 1))
+				x, y = choice(grid), choice(grid)
 				if defenseGrid[enemy][x][y] % 2 == 0:
 					break
 	elif (x, y) in queueGrid[player]:
@@ -191,8 +192,7 @@ def count(array, value, boolean = False):
 	return result
 def addShip(x, y, direction, length, player):
 	placementQueue = []
-	directions = ('L', 'U', 'R', 'D') if type(direction) == str else (left, up, right, down)
-	step, axis = dict(zip(directions, ((-1, 'X'), (-1, 'Y'), (1, 'X'), (1, 'Y'))))[direction]
+	step, axis = dict(zip(('L', 'U', 'R', 'D'), ((-1, 'X'), (-1, 'Y'), (1, 'X'), (1, 'Y'))))[direction]
 	xLength, yLength, xStep, yStep = [1, step * length, 1, step] if axis == 'Y' else [step * length, 1, step, 1]
 	for xIter in range(x, x+xLength, xStep):
 		for yIter in range(y, y+yLength, yStep):
@@ -213,7 +213,7 @@ inputMessage = ("game started", colors['success'])
 while len(shipsGrid[player1]) < len(ships):
 	updateScreen()
 	shipInfo = ships[len(shipsGrid[player1])]
-	result = getInput("Place your {}{preview}".format(shipInfo[0], preview = (' '+cell[ship]) * shipInfo[1]), 'ship', hidden = 5 * shipInfo[1])
+	result = getInput("Place your " + shipInfo[0] + (' ' + cell[ship]) * shipInfo[1], 'ship', hidden = 5 * shipInfo[1])
 	inputMessage = ("filling board", colors['success'])
 	if result == 'dev' and len(shipsGrid[player1]) == 0:
 		for i, y in enumerate(range(0, gridSize, 2)):
@@ -233,10 +233,7 @@ while len(shipsGrid[player1]) < len(ships):
 		else:
 			inputMessage = ("invalid ship location", colors['fail'])
 while len(shipsGrid[player2]) < len(ships):
-	shipInfo = ships[len(shipsGrid[player2])]
-	shipX, shipY = randint(min(grid), max(grid)), randint(min(grid), max(grid))
-	direction = randint(0, 3)
-	addShip(shipX, shipY, direction, shipInfo[1], player2)
+	addShip(choice(grid), choice(grid), choice('L', 'U', 'R', 'D'), ships[len(shipsGrid[player2])][1], player2)
 turnCount = 0
 inputMessage = ("you are now attacking", colors['success'])
 history = [("Ships", 'Placed', colors['ship'])]
