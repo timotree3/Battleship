@@ -25,14 +25,14 @@ examples = {'ship':("A 0 Down", "A, 0, D", "a, 0 DoWN"), 'attack':("A, 0", "0, a
 refresh, check = True, 'strict'
 global gridSize, shipName, shipLength, colors
 config = json.load(open("config.json"))
-if(type(config) != dict):
+if type(config) != dict:
 	raise Exception("config.json completely invalid")
 for configurable, test in configurables:
 	validity, value = test(config[configurable])
-	if(not(validity)):
+	if not(validity):
 		raise Exception(configurable + " invalid.")
 	locals()[configurable] = value
-if(max(shipLength) > gridSize or sum(shipLength) > gridSize ** 2):
+if max(shipLength) > gridSize or sum(shipLength) > gridSize ** 2:
 	raise Exception("invalid shipLength and gridSize ratios.")
 global grid, ships, reset, cell
 grid = range(gridSize)
@@ -59,16 +59,16 @@ def updateScreen():
 	histName = 'History'
 	global screenWidth, screenHeight, history, refresh
 	b4Width, b4Height, screenWidth, screenHeight = screenWidth, screenHeight, *get_terminal_size()
-	if(screenWidth<72 or screenHeight<24 or b4Width != screenWidth or b4Height != screenHeight):
-		if(screenWidth<72 or screenHeight<24):
+	if screenWidth<72 or screenHeight<24 or b4Width != screenWidth or b4Height != screenHeight:
+		if screenWidth<72 or screenHeight<24:
 			printLoc("Please enlarge your terminal", 0, 0)
 		refresh = True
-		while(screenWidth<72 or screenHeight<24 or b4Width != screenWidth or b4Height != screenHeight):
+		while screenWidth<72 or screenHeight<24 or b4Width != screenWidth or b4Height != screenHeight:
 			b4Width, b4Height, screenWidth, screenHeight = screenWidth, screenHeight, *get_terminal_size()
 			sleep(0.1)
 	align = lambda text, alignment, hidden = 0:round(hidden + {'l':screenWidth / 4, 'm':screenWidth / 2, 'r':screenWidth * 3 / 4}[alignment] - (len(text) / 2))
 	leftX, legendX, rightX = screenWidth // 4 - (gridSize + 1), align(legend[-1], 'm') - 1, screenWidth * 3 // 4 - (gridSize + 1)
-	if(refresh):
+	if refresh:
 		from os import name, system
 		print('\033[s\033[2J')
 		system('cls' if name == 'nt' else 'clear')
@@ -95,9 +95,9 @@ def updateScreen():
 def getInput(prompt, example = None, queue = None, hidden = 0):
 	global examples, inputMessage
 	printLoc(inputMessage[1] + '{}.'.format(inputMessage[0].capitalize()), 0, gridSize + 8)
-	if(example in examples):
+	if example in examples:
 		printLoc(colors['prompt'] + 'Example input{1}: ({0})'.format(' | '.join(examples[example]), 's'[:len(example) - 1]), 0, gridSize + 10)
-	if(queue):
+	if queue:
 		printLoc('\033[2K' + colors['prompt'] + 'Suggested move{1}: {0}'.format(', '.join(['{} {}'.format(chr(x + 65), y) for x, y in queue[-3:]]), 's'[:len(queue)]), 0, gridSize + 10)
 	answer = input(colors['prompt'] + '\033[{y};0H{}{}: '.format(prompt, reset, y = gridSize + 9))
 	printLoc('\033[2K\n' * 3, 0, gridSize + 8)
@@ -110,83 +110,83 @@ def parseInput(text, preparation, *filters):
 			match = []
 			for element, Filter in zip(combo, filters):
 				match.append(Filter[1](element) if(Filter[0](element)) else None)
-			if(None not in match):
+			if None not in match:
 				return match
 	return False
 def offensiveTurn(player, x = 0, y = 0):
 	enemy = int(not(player))
-	if(player == player2):
-		if(queueGrid[player]):
+	if player == player2:
+		if queueGrid[player]:
 			x, y = queueGrid[player].pop(randint(0, len(queueGrid[player]) - 1))
 		else:
 			global check
-			while(check):
+			while check:
 				queue, invalids = [], []
 				for y in grid:
 					for x in grid:
-						if(defenseGrid[enemy][x][y] % 2 == 0):
+						if defenseGrid[enemy][x][y] % 2 == 0:
 							queue.append((x, y))
 						else:
 							invalids.append((x, y))
 				for x, y in {'strict':invalids, 'casual':queue}[check]:
 					for offset in range(1, min([shipLength[i] for i, shipList in enumerate(shipsGrid[enemy]) if len(shipList) > 0])):
-						if(check == 'strict'):
+						if check == 'strict':
 							for checkX, checkY in ((x - offset, y), (x + offset, y), (x, y - offset), (x, y + offset)):
-								if((checkX, checkY) in queue):
+								if (checkX, checkY) in queue:
 									queue.remove((checkX, checkY))
-						elif(check == 'casual'):
+						elif check == 'casual':
 							for checkX, checkY in ((x - offset, y), (x + offset, y), (x, y - offset), (x, y + offset)):
-								if(checkX in grid and checkY in grid and defenseGrid[enemy][checkX][checkY] != miss):
+								if checkX in grid and checkY in grid and defenseGrid[enemy][checkX][checkY] != miss:
 									break
 							else:
-								if((x, y) in queue):
+								if (x, y) in queue:
 									queue.remove((x, y))
-				if(queue):
+				if queue:
 					x, y = queue[randint(0, len(queue) - 1)]
 					break
 				else:
 					check = ('strict', 'casual', None)[('strict', 'casual', None).index(check) + 1]
-			while(not(check)):
+			while not(check):
 				x, y = (randint(0, gridSize - 1), randint(0, gridSize - 1))
-				if(defenseGrid[enemy][x][y] % 2 == 0):
+				if defenseGrid[enemy][x][y] % 2 == 0:
 					break
-	elif((x, y) in queueGrid[player]):
+	elif (x, y) in queueGrid[player]:
 		queueGrid[player].remove((x, y))
-	if(x not in grid or y not in grid):
+	if x not in grid or y not in grid:
 		return ('out', x, y)
 	try:
 		defenseGrid[enemy][x][y] = {empty:miss,ship:hit}[defenseGrid[enemy][x][y]]
 	except KeyError:
 		return ('wasted', x, y)
-	if(defenseGrid[enemy][x][y] == hit):
+	if defenseGrid[enemy][x][y] == hit:
 		sunk = None
 		for i, shipCells in enumerate(shipsGrid[enemy]):
-			if((x, y) in shipCells):
+			if (x, y) in shipCells:
 				shipCells.remove((x, y))
-				if(len(shipCells) == 0):
+				if len(shipCells) == 0:
 					sunk = i
 				break
 		for x2 in (x - 1, x + 1):
 			for y2 in (y - 1, y + 1):
-				if(x2 in grid and y2 in grid and (x2, y2) in queueGrid[player]):
+				if x2 in grid and y2 in grid and (x2, y2) in queueGrid[player]:
 					queueGrid[player].remove((x2, y2))
-		if(sunk != None):
+		if sunk != None:
 			return (sunk, x, y)
 		firstHit, secondHit = [], []
 		for x2, y2 in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
-			if(x2 in grid and y2 in grid):
-				if(defenseGrid[enemy][x2][y2] % 2 == 0 and (x2, y2) not in queueGrid[player]):
+			if x2 in grid and y2 in grid:
+				if defenseGrid[enemy][x2][y2] % 2 == 0 and (x2, y2) not in queueGrid[player]:
 					firstHit.append((x2, y2))
-				if(defenseGrid[enemy][x2][y2] == hit and (x + (x - x2), y + (y - y2)) not in queueGrid[player]):
+				if defenseGrid[enemy][x2][y2] == hit and (x + (x - x2), y + (y - y2)) not in queueGrid[player]:
 					secondHit.append((x + (x - x2), y + (y - y2)))
 		queueGrid[player] += secondHit if secondHit else firstHit
 	return (('empty', 'miss', 'ship', 'hit')[defenseGrid[enemy][x][y]], x, y)
 def count(array, value, boolean = False):
 	result = array.count(value)
-	if(result > 0 and boolean):
+	if result > 0 and boolean:
 		return(True)
 	for element in array:
-		if(type(element) == list):
+		if type(element) == list:
 			result += count(element, value, maximum)
 	return result
 def addShip(x, y, direction, length, player):
@@ -196,8 +196,8 @@ def addShip(x, y, direction, length, player):
 	xLength, yLength, xStep, yStep = [1, step * length, 1, step] if axis == 'Y' else [step * length, 1, step, 1]
 	for xIter in range(x, x+xLength, xStep):
 		for yIter in range(y, y+yLength, yStep):
-			if(xIter in grid and yIter in grid):
-				if(defenseGrid[player][xIter][yIter] == empty):
+			if xIter in grid and yIter in grid:
+				if defenseGrid[player][xIter][yIter] == empty:
 					placementQueue.append((str(xIter), str(yIter)))
 				else:
 					return 'occupied'
@@ -210,29 +210,29 @@ def addShip(x, y, direction, length, player):
 		shipsGrid[player][-1].append((x, y))
 	return 'success'
 inputMessage = ("game started", colors['success'])
-while(len(shipsGrid[player1]) < len(ships)):
+while len(shipsGrid[player1]) < len(ships):
 	updateScreen()
 	shipInfo = ships[len(shipsGrid[player1])]
 	result = getInput("Place your {}{preview}".format(shipInfo[0], preview = (' '+cell[ship]) * shipInfo[1]), 'ship', hidden = 5 * shipInfo[1])
 	inputMessage = ("filling board", colors['success'])
-	if(result == 'dev' and len(shipsGrid[player1]) == 0):
+	if result == 'dev' and len(shipsGrid[player1]) == 0:
 		for i, y in enumerate(range(0, gridSize, 2)):
 			addShip(0, y, right, shipLength[i], player1)
 	else:
 		result = parseInput(result, seperator, xFilter, yFilter, dirFilter)
-		if(result):
+		if result:
 			prettyX, shipY, shipDir = result
 			shipX = practicalX(prettyX)
 			shipMessage = addShip(shipX, shipY, shipDir, shipInfo[1], player1)
-			if(shipMessage == 'success'):
+			if shipMessage == 'success':
 				history.append((prettyX + str(shipY), 'Ship Placed', colors['ship']))
-			elif(shipMessage == 'occupied'):
+			elif shipMessage == 'occupied':
 				inputMessage = ("location already filled", colors['fail'])
-			elif(shipMessage == 'out'):
+			elif shipMessage == 'out':
 				inputMessage = ("location out of bounds", colors['fail'])
 		else:
 			inputMessage = ("invalid ship location", colors['fail'])
-while(len(shipsGrid[player2]) < len(ships)):
+while len(shipsGrid[player2]) < len(ships):
 	shipInfo = ships[len(shipsGrid[player2])]
 	shipX, shipY = randint(min(grid), max(grid)), randint(min(grid), max(grid))
 	direction = randint(0, 3)
@@ -240,13 +240,13 @@ while(len(shipsGrid[player2]) < len(ships)):
 turnCount = 0
 inputMessage = ("you are now attacking", colors['success'])
 history = [("Ships", 'Placed', colors['ship'])]
-while(True):
+while True:
 	updateScreen()
-	if(turnCount % 2 == 0):
+	if turnCount % 2 == 0:
 		status, player, enemy = 'won', player1, player2
 		result = parseInput(getInput("Attack a cell", 'attack', queueGrid[player]), seperator, xFilter, yFilter)
 		inputMessage = ("it is your turn", colors['success'])
-		if(result):
+		if result:
 			prettyX, attackY = result
 			attackX = practicalX(prettyX)
 			turnMessage = offensiveTurn(player1, attackX, attackY)[0]
@@ -258,16 +258,16 @@ while(True):
 		status, player, enemy = 'lost', player2, player1
 		turnMessage, attackX, attackY = offensiveTurn(player2)
 		prettyX = chr(attackX+65)
-	if(turnMessage == 'wasted'):
+	if turnMessage == 'wasted':
 		inputMessage = ("cell already attacked", colors['fail'])
-	if(turnMessage == 'out'):
+	if turnMessage == 'out':
 		inputMessage = ("location out of bounds", colors['fail'])
-	elif(not(turnMessage == 'wasted') or wasteTurns):
+	elif not(turnMessage == 'wasted') or wasteTurns:
 		turnCount += 1
-		if(type(turnMessage) == int):
+		if type(turnMessage) == int:
 			updateScreen()
 			history.append((prettyX + str(attackY), "Sunk '{}'".format(ships[turnMessage][0].title()), colors['ship']))
-			if(len(list(chain.from_iterable(shipsGrid[enemy]))) == 0):
+			if len(list(chain.from_iterable(shipsGrid[enemy]))) == 0:
 				input("\033[{y};0H\033[J\n{color}You {} in {} turns!{}\n".format(status, turnCount // 2, reset, color = colors['interface'], y = gridSize + 7))
 				break
 		else:
