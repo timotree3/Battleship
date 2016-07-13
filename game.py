@@ -2,15 +2,10 @@ from time import sleep
 from itertools import chain
 from shutil import get_terminal_size
 from json import load as json
-import re
 global empty, miss, ship, hit
 empty, miss, ship, hit = 0, 1, 2, 3
 global player1, player2
 player1, player2 = 0, 1
-seperator = lambda txt:re.split(r'[, .|]+', txt)
-xFilter = (lambda txt:re.fullmatch(r'[A-Z]+', txt, re.I), lambda txt:txt.upper())
-yFilter = (lambda txt:re.fullmatch(r'\d+', txt), lambda txt:int(txt))
-dirFilter = (lambda txt:re.fullmatch(r'(?:[urdl]|up|right|down|left)', txt, re.I), lambda txt:txt.upper()[0])
 configurables = (("wasteTurns", lambda option:(type(option) == bool, option)),
 ("gridSize", lambda option:(type(option) == int and int(option) > 0, option)),
 ("shipLength", lambda option:(option and min(option) > 0, tuple(option))),
@@ -100,15 +95,19 @@ def getInput(prompt, example = None, queue = None, hidden = 0):
 	answer = input(colors['prompt'] + '\033[{y};0H{}{}: '.format(prompt, reset, y = gridSize + 9))
 	printLoc('\033[2K\n' * 3, 0, gridSize + 8)
 	return answer.strip()
-def parseInput(text, preparation, *filters):
+def getLocation(text, *extras):
 	from itertools import permutations
-	prepared = preparation(text)
-	for inputLength in range(len(filters), len(prepared)+1):
-		for combo in permutations(prepared[:inputLength]):
+	from re import split, fullmatch, IGNORECASE
+	checks = [(r'[A-Z]+', str.upper), (r'\d+', int)] + extras
+	values = split(r',? +', text)
+	for length in range(len(checks), len(values)+1):
+		for combo in permutations(values[:length]):
 			match = []
-			for element, Filter in zip(combo, filters):
-				match.append(Filter[1](element) if(Filter[0](element)) else None)
-			if None not in match:
+			for value, check in zip(combo, checks):
+				if not fullmatch(check[0], value, IGNORECASE):
+					break
+				match.append(check[1](value))
+			else:#runs only if loop ended without a encountering a 'break' statement
 				return match
 	return False
 def offensiveTurn(player, x = 0, y = 0):
@@ -217,11 +216,11 @@ while len(shipsGrid[player1]) < len(ships):
 		for i, y in enumerate(range(0, gridSize, 2)):
 			addShip(0, y, 'R', shipLength[i], player1)
 	else:
-		result = parseInput(result, seperator, xFilter, yFilter, dirFilter)
+		result = getLocation(result, (r'l(?:eft)?|u(?:p)?|r(?:ight)?|d(?:own)?', str.upper))
 		if result:
 			prettyX, shipY, shipDir = result
 			shipX = practicalX(prettyX)
-			shipMessage = addShip(shipX, shipY, shipDir, shipInfo[1], player1)
+			shipMessage = addShip(shipX, shipY, shipDir[0], shipInfo[1], player1)
 			if shipMessage == 'success':
 				history.append((prettyX + str(shipY), 'Ship Placed', colors['ship']))
 			elif shipMessage == 'occupied':
@@ -239,7 +238,7 @@ while True:
 	updateScreen()
 	if turnCount % 2 == 0:
 		status, player, enemy = 'won', player1, player2
-		result = parseInput(getInput("Attack a cell", 'attack', queueGrid[player]), seperator, xFilter, yFilter)
+		result = getLocation(getInput("Attack a cell", 'attack', queueGrid[player]))
 		inputMessage = ("it is your turn", colors['success'])
 		if result:
 			prettyX, attackY = result
