@@ -1,7 +1,8 @@
-from time import sleep
-from itertools import chain
+from time import sleep as delay
+from itertools import chain as combine
 from shutil import get_terminal_size
 from json import load as json
+from random import choice
 global empty, miss, ship, hit
 empty, miss, ship, hit = 0, 1, 2, 3
 global player1, player2
@@ -58,7 +59,7 @@ def updateScreen():
 		refresh = True
 		while screenWidth<72 or screenHeight<24 or b4Width != screenWidth or b4Height != screenHeight:
 			b4Width, b4Height, screenWidth, screenHeight = screenWidth, screenHeight, *get_terminal_size()
-			sleep(0.1)
+			delay(0.1)
 	align = lambda text, alignment, hidden = 0:round(hidden + {'l':screenWidth / 4, 'm':screenWidth / 2, 'r':screenWidth * 3 / 4}[alignment] - (len(text) / 2))
 	leftX, legendX, rightX = screenWidth // 4 - (gridSize + 1), align(legend[-1], 'm') - 1, screenWidth * 3 // 4 - (gridSize + 1)
 	if refresh:
@@ -98,7 +99,7 @@ def getInput(prompt, example = None, queue = None, hidden = 0):
 def getLocation(text, *extras):
 	from itertools import permutations
 	from re import split, fullmatch, IGNORECASE
-	checks = [(r'[A-Z]+', str.upper), (r'\d+', int)] + extras
+	checks = [(r'[A-Z]+', str.upper), (r'\d+', int)] + list(extras)
 	values = split(r',? +', text)
 	for length in range(len(checks), len(values)+1):
 		for combo in permutations(values[:length]):
@@ -111,7 +112,7 @@ def getLocation(text, *extras):
 				return match
 	return False
 def offensiveTurn(player, x = 0, y = 0):
-	from random import choice, randrange
+	from random import randrange
 	enemy = int(not(player))
 	if player == player2:
 		if queueGrid[player]:
@@ -230,7 +231,7 @@ while len(shipsGrid[player1]) < len(ships):
 		else:
 			inputMessage = ("invalid ship location", colors['fail'])
 while len(shipsGrid[player2]) < len(ships):
-	addShip(choice(grid), choice(grid), choice('L', 'U', 'R', 'D'), ships[len(shipsGrid[player2])][1], player2)
+	addShip(choice(grid), choice(grid), choice(('L', 'U', 'R', 'D')), ships[len(shipsGrid[player2])][1], player2)
 turnCount = 0
 inputMessage = ("you are now attacking", colors['success'])
 history = [("Ships", 'Placed', colors['ship'])]
@@ -248,7 +249,7 @@ while True:
 			inputMessage = ("invalid input", colors['fail'])
 			continue
 	else:
-		sleep(0.75)
+		delay(0.75)
 		status, player, enemy = 'lost', player2, player1
 		turnMessage, attackX, attackY = offensiveTurn(player2)
 		prettyX = chr(attackX+65)
@@ -261,7 +262,7 @@ while True:
 		if type(turnMessage) == int:
 			updateScreen()
 			history.append((prettyX + str(attackY), "Sunk '{}'".format(ships[turnMessage][0].title()), colors['ship']))
-			if len(list(chain.from_iterable(shipsGrid[enemy]))) == 0:
+			if len(list(combine.from_iterable(shipsGrid[enemy]))) == 0:
 				input("\033[{y};0H\033[J\n{color}You {} in {} turns!{}\n".format(status, turnCount // 2, reset, color = colors['interface'], y = gridSize + 7))
 				break
 		else:
