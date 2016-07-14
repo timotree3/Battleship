@@ -17,8 +17,8 @@ screenWidth, screenHeight = get_terminal_size()
 examples = {'ship':("A 0 Down", "A, 0, D", "a, 0 DoWN"), 'attack':("A, 0", "0, a", "a 0")}
 refresh, check = True, 'strict'
 global gridSize, shipName, shipLength, colors
-with open("config.json") as config:
-	config = json(config)
+with open("config.json") as configjson:
+	config = json(configjson)
 if type(config) != dict:
 	raise Exception("config.json completely invalid")
 for configurable, test in configurables:
@@ -40,11 +40,6 @@ history = [('War', 'Declared', colors['success'])]
 global printLoc
 printLoc = lambda text, x, y:print('\033[{y};{x}H{text}'.format(y = y, x = x,text = text)+reset)
 practicalX = lambda coord: sum([(([chr(i + 65) for i in range(26)].index(val.upper()) + 1) * 26 ** i) for i, val in enumerate(reversed(coord))])-1
-def round(num: float):
-	adder = 0
-	for digit in reversed(str(num)[str(num).index('.') + 1:]):
-		adder = int(int(digit) + adder >= 5)
-	return(int(str(num)[:str(num).index('.')]) + adder)
 def updateScreen():
 	leftGrid, rightGrid, leftTitle, rightTitle = defenseGrid[player2], defenseGrid[player1], "Enemy Fleet", "Your Fleet"
 	title = "=== TimoTree Battleship ==="
@@ -60,18 +55,17 @@ def updateScreen():
 		while screenWidth<72 or screenHeight<24 or b4Width != screenWidth or b4Height != screenHeight:
 			b4Width, b4Height, screenWidth, screenHeight = screenWidth, screenHeight, *get_terminal_size()
 			delay(0.1)
-	align = lambda text, alignment, hidden = 0:round(hidden + {'l':screenWidth / 4, 'm':screenWidth / 2, 'r':screenWidth * 3 / 4}[alignment] - (len(text) / 2))
-	leftX, legendX, rightX = screenWidth // 4 - (gridSize + 1), align(legend[-1], 'm') - 1, screenWidth * 3 // 4 - (gridSize + 1)
+	leftX, legendX, rightX = screenWidth // 4 - (gridSize + 1), int(screenWidth / 2 - len(legend[-1]) / 2) - 1, screenWidth * 3 // 4 - (gridSize + 1)
 	if refresh:
 		from os import name, system
 		print('\033[s\033[2J')
 		system('cls' if name == 'nt' else 'clear')
 		print('\033[u')
-		printLoc(colors['interface'] + title, align(title, 'm'), 2)
-		printLoc(colors['interface'] + leftTitle, align(leftTitle, 'l') - 1, 4)
-		printLoc(colors['interface'] + rightTitle, align(rightTitle, 'r'), 4)
-		printLoc(colors['interface'] + ruler, leftX+2, 6)
-		printLoc(colors['interface'] + ruler, rightX+2, 6)
+		printLoc(colors['interface'] + title, int(screenWidth / 2 - len(title) / 2), 2)
+		printLoc(colors['interface'] + leftTitle, int(screenWidth / 4 - len(leftTitle) / 2) - 1, 4)
+		printLoc(colors['interface'] + rightTitle, int(screenWidth * 3 / 4 - len(rightTitle) / 2), 4)
+		printLoc(colors['interface'] + ruler, leftX + 2, 6)
+		printLoc(colors['interface'] + ruler, rightX + 2, 6)
 		printLoc(colors['interface'] + legend[-1], legendX + 1, 7)
 		for i in range(len(cell)):
 			printLoc(cell[i] + " - " + legend[i], legendX, i + 8)
@@ -81,10 +75,10 @@ def updateScreen():
 		for x in grid:
 			printLoc(cell[{ship:empty}.get(leftGrid[x][y], leftGrid[x][y])], leftX+(x+1) * 2, 7+y)
 			printLoc(cell[rightGrid[x][y]], rightX+(x+1) * 2, 7+y)
-	printLoc('\033[J' + colors['prompt'] + histName, align(histName, 'm'), gridSize + 11)
+	printLoc('\033[J' + colors['prompt'] + histName, int(screenWidth / 2 - len(histName) / 2), gridSize + 11)
 	for place, action, color, y in zip(*zip(*reversed(history)), range(gridSize + 12, screenHeight)):
 		message = '{}: {}'.format(place, action)
-		printLoc(color + message, align(message, 'm'), y)
+		printLoc(color + message, int(screenWidth / 2 - len(message) / 2), y)
 	refresh = False
 def getInput(prompt, example = None, queue = None, hidden = 0):
 	global examples, inputMessage
@@ -180,14 +174,6 @@ def offensiveTurn(player, x = 0, y = 0):
 					secondHit.append((x + (x - x2), y + (y - y2)))
 		queueGrid[player] += secondHit if secondHit else firstHit
 	return (('empty', 'miss', 'ship', 'hit')[defenseGrid[enemy][x][y]], x, y)
-def count(array, value, boolean = False):
-	result = array.count(value)
-	if result > 0 and boolean:
-		return(True)
-	for element in array:
-		if type(element) == list:
-			result += count(element, value, maximum)
-	return result
 def addShip(x, y, direction, length, player):
 	placementQueue = []
 	step, axis = {'L': (-1, 'X'), 'U': (-1, 'Y'), 'R': (1, 'X'), 'D': (1, 'Y')}[direction]
