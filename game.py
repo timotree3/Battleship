@@ -5,18 +5,18 @@ from json import load as json
 from random import choice
 empty, miss, ship, hit = 0, 1, 2, 3
 player1, player2 = 0, 1
-configurables = (("wasteTurns", lambda option: (type(option) == bool, option)),
-("gridSize", lambda option: (type(option) == int and int(option) > 0, option)),
+configurables = (("wasteTurns", lambda option: (isinstance(option, bool), option)),
+("gridSize", lambda option: (isinstance(option, int) and int(option) > 0, option)),
 ("shipLength", lambda option: (option and min(option) > 0, tuple(option))),
 ("shipName", lambda option: (option, tuple([str(i) for i in option]))),
-("colors", lambda option: (type(option) == dict,
+("colors", lambda option: (isinstance(option, dict),
 dict([(key, '\033[3{}m'.format(('black', 'red', 'green', 'yellow', 'blue', 'purple', 'cyan', 'white').index(value))) for key, value in option.items()]))))
 screenWidth, screenHeight = get_terminal_size()
 examples = {'ship':("A 0 Down", "A, 0, D", "a, 0 DoWN"), 'attack':("A, 0", "0, a", "a 0")}
 refresh, check = True, 'strict'
 with open("config.json") as configjson:
     config = json(configjson)
-if type(config) != dict:
+if not isinstance(config, dict):
     raise Exception("config.json completely invalid")
 for configurable, test in configurables:
     validity, value = test(config[configurable])
@@ -239,7 +239,7 @@ while True:
         inputMessage = ("location out of bounds", colors['fail'])
     elif not(turnMessage == 'wasted') or wasteTurns:
         turnCount += 1
-        if type(turnMessage) == int:
+        if isinstance(turnMessage, int):
             updateScreen()
             history.append((prettyX + str(attackY), "Sunk '{}'".format(ships[turnMessage][0].title()), colors['ship']))
             if len(list(combine.from_iterable(shipsGrid[enemy]))) == 0:
