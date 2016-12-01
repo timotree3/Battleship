@@ -1,43 +1,49 @@
-[![Stories in Ready](https://badge.waffle.io/timotree3/battleship.png?label=ready&title=Ready)](https://waffle.io/timotree3/battleship)
-# ==TimoTree Battleship==
-==My first battleship game. Written in Python.==
+[![Tasks in Ready](https://badge.waffle.io/timotree3/battleship.png?label=ready&title=Ready)](https://waffle.io/timotree3/battleship)
 
-A text-based battleship game. Everything works great including:
-### Signicant Features:
-* Configuration file to change colors, grid size, and other things
-* Open source game
-* Good AI that is still being improved
-* Great color coded UI with visual grid representation and history
-***
-### Description:
-The game starts with placing ships. You an place them anywhere on the grid and you want to put them in a place the enemy won't expect.   
-After the ships are placed you attack the enemies area and try to guess where there ships are.   
-The game ends after all of one players ships have sunk.
+# TimoTree's Battleship
+
+A text-based battleship game. (Mostly for my own learning)
+
+## Description
+
+The game is a Python3 script that reads the `config.json` file for configuration options. It uses ANSI escape codes for coloring text and moving the cursor which are not supported by many old terminals.
+
+You play against a computer controlled bot.
+
+## Gameplay
+
+* The game starts by letting you place your ships.
+* After all ships are placed you take turns blindly attacking eachother's sides.
+* If you guess a spot correctly that spot on the enemy ship becomes hit.
+* If every spot on a ship has been hit the ship sinks.
+* The game ends when a player's last ship sinks.
+
+### Example screen
+
 ```
-Example window:
-                          ===TimoTree Battleship===
+                         === TimoTree Battleship ===
 
-     Map of Computer's Fleet                        Map of YOUR Fleet
+            Enemy Fleet                               Your Fleet
 
-   A  B  C  D  E  F  G  H  I  J                 A  B  C  D  E  F  G  H  I  J
-0  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~    Legend:   0  #  ~  ~  ~  ~  ~  ~  ~  ~  #
-1  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~   ~ - Empty  1  #  ~  ~  ~  ~  ~  ~  ~  ~  #
-2  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~   O - Miss   2  ~  ~  ~  #  #  #  #  ~  ~  #
-3  ~  ~  X  X  ~  ~  ~  ~  ~  ~   # - Ship   3  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~
-4  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~   X - Hit    4  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~
-5  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~              5  ~  ~  ~  ~  ~  O  ~  ~  ~  ~
-6  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~              6  O  ~  ~  ~  ~  ~  ~  ~  ~  ~
-7  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~              7  ~  ~  ~  ~  ~  ~  ~  ~  ~  #
-8  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~              8  ~  ~  ~  #  #  #  #  #  ~  #
-9  ~  ~  ~  ~  ~  ~  ~  ~  ~  ~              9  ~  ~  ~  ~  ~  ~  ~  ~  ~  #
+          A B C D E F G H I J                     A B C D E F G H I J
+        0 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~      Legend:      0 # ~ ~ ~ ~ ~ ~ ~ ~ #
+        1 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~     ~ - Empty     1 # ~ ~ ~ ~ ~ ~ ~ ~ #
+        2 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~     O - Miss      2 ~ ~ ~ # # # # ~ ~ #
+        3 ~ ~ X X ~ ~ ~ ~ ~ ~     # - Ship      3 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+        4 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~     X - Hit       4 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+        5 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~                   5 ~ ~ ~ ~ ~ O ~ ~ ~ ~
+        6 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~                   6 O ~ ~ ~ ~ ~ ~ ~ ~ ~
+        7 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~                   7 ~ ~ ~ ~ ~ ~ ~ ~ ~ #
+        8 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~                   8 ~ ~ ~ # # # # # ~ #
+        9 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~                   9 ~ ~ ~ ~ ~ ~ ~ ~ ~ #
 
+It is your turn.
 Attack a cell: _
-
-Your Attacks:                         Computer's Attacks:
- C3 - Hit! Sunk Patrol Boat            F5 - Miss!
- D3 - Hit!                             A6 - Miss!
+Example inputs: (A, 0,| 0, a | a 0)
+                                   History:
+                                   F5: Miss
+                                   D3: Hit
+                                   A6: Miss
 ```
-###### Come play with us!
-***
-#### Requires Python version 3.*
-##### Windows versions before Windows 10 do not interpret color and mouse movement codes correctly and might require a future patch.
+
+#### *Come play with us!*
