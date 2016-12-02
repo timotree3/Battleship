@@ -1,7 +1,7 @@
 from time import sleep as delay
 from itertools import chain as combine
 from shutil import get_terminal_size
-from json import load as json
+from json import load
 from random import choice
 empty, miss, ship, hit = 0, 1, 2, 3
 player1, player2 = 0, 1
@@ -159,26 +159,51 @@ def addShip(x, y, direction, length, player):
         defenseGrid[player][x][y] = ship
         shipsGrid[player][-1].append((x, y))
     return 'success'
+def checkConfig():
+    class ConfigError(Exception):
+        def __init__(self, error, fix):
+            self.error = error
+            self.fix = fix if fix else "using the default config file"
+        def __str__(self):
+            print("config: {}\n(try {})".format(self.error, self.fix))
+    if not isinstance(wasteTurns, bool):
+        raise ConfigError("wasteTurns is not type bool",
+                          "making it either 'true' or 'false'")
+    if not isinstance(gridSize, int):
+        raise ConfigError("gridSize is not an integer",
+                          "setting it to a whole number")
+    if gridSize < 1:
+        raise ConfigError("gridSize is less than 1",
+                          "setting it to be more than 1")
+    if len(shipLength) < 1:
+        raise ConfigError("shipLength is empty",
+                          "adding a length to it")
+    if min(shipLength) < 1:
+        raise ConfigError("there is a ship with a length of less than 1",
+                          "making them all 1 or more")
+    if max(shipLength) > gridSize:
+        raise ConfigError("there is a ship too long to fit on the grid",
+                          "making it shorter")
+    if sum(shipLength) > gridSize*gridSize:
+        raise ConfigError("not all the ships can fit",
+                          "making them all shorter")
+    if not isinstance(colors, dict):
+        raise ConfigError("colors is not an object",
+                          "adding curly braces")
 screenWidth, screenHeight = get_terminal_size()
 examples = {'ship':("A 0 Down", "A, 0, D", "a, 0 DoWN"), 'attack':("A, 0", "0, a", "a 0")}
 refresh, check = True, 'strict'
-with open("config.json") as configjson:
-    config = json(configjson)
-if not isinstance(config, dict):
-    raise Exception("config.json completely invalid")
-configurables = (("wasteTurns", lambda option: (isinstance(option, bool), option)),
-("gridSize", lambda option: (isinstance(option, int) and int(option) > 0, option)),
-("shipLength", lambda option: (option and min(option) > 0, tuple(option))),
-("shipName", lambda option: (option, tuple([str(i) for i in option]))),
-("colors", lambda option: (isinstance(option, dict),
-dict([(key, '\033[3{}m'.format(('black', 'red', 'green', 'yellow', 'blue', 'purple', 'cyan', 'white').index(value))) for key, value in option.items()]))))
-for configurable, test in configurables:
-    validity, value = test(config[configurable])
-    if not validity:
-        raise Exception(configurable + " invalid.")
-    locals()[configurable] = value
-if max(shipLength) > gridSize or sum(shipLength) > gridSize ** 2:
-    raise Exception("invalid shipLength and gridSize ratios.")
+with open("config.json") as config:
+    configured = load(config)
+if not isinstance(configured, dict):
+    raise Exception("file is not an object")
+wasteTurns = configured["wasteTurns"]
+gridSize = configured["gridSize"]
+shipLength, shipName = configured["shipLength"], configured["shipName"]
+colors = configured["colors"]
+checkConfig()
+for element in colors:
+    colors[element] = "\033[3{}m".format(('black', 'red', 'green', 'yellow', 'blue', 'purple', 'cyan', 'white').index(colors[element]))
 grid = range(gridSize)
 ships = tuple(zip(shipName, shipLength))
 cell = (colors['empty'] + '~', colors['miss'] + 'O', colors['ship'] + '#', colors['hit'] + 'X')
