@@ -5,35 +5,7 @@ from json import load as json
 from random import choice
 empty, miss, ship, hit = 0, 1, 2, 3
 player1, player2 = 0, 1
-configurables = (("wasteTurns", lambda option: (isinstance(option, bool), option)),
-("gridSize", lambda option: (isinstance(option, int) and int(option) > 0, option)),
-("shipLength", lambda option: (option and min(option) > 0, tuple(option))),
-("shipName", lambda option: (option, tuple([str(i) for i in option]))),
-("colors", lambda option: (isinstance(option, dict),
-dict([(key, '\033[3{}m'.format(('black', 'red', 'green', 'yellow', 'blue', 'purple', 'cyan', 'white').index(value))) for key, value in option.items()]))))
-screenWidth, screenHeight = get_terminal_size()
-examples = {'ship':("A 0 Down", "A, 0, D", "a, 0 DoWN"), 'attack':("A, 0", "0, a", "a 0")}
-refresh, check = True, 'strict'
-with open("config.json") as configjson:
-    config = json(configjson)
-if not isinstance(config, dict):
-    raise Exception("config.json completely invalid")
-for configurable, test in configurables:
-    validity, value = test(config[configurable])
-    if not validity:
-        raise Exception(configurable + " invalid.")
-    locals()[configurable] = value
-if max(shipLength) > gridSize or sum(shipLength) > gridSize ** 2:
-    raise Exception("invalid shipLength and gridSize ratios.")
-grid = range(gridSize)
-ships = tuple(zip(shipName, shipLength))
 reset = '\033[0m'
-cell = (colors['empty'] + '~', colors['miss'] + 'O', colors['ship'] + '#', colors['hit'] + 'X')
-defenseGrid = [[[0 for y in grid] for x in grid] for team in range(2)]
-shipsGrid, queueGrid = [[], []], [[], []]
-history = [('War', 'Declared', colors['success'])]
-printLoc = lambda text, x, y: print('\033[{y};{x}H{text}'.format(y=y, x=x, text=text) + reset)
-practicalX = lambda coord: sum([(([chr(i + 65) for i in range(26)].index(val.upper()) + 1) * 26 ** i) for i, val in enumerate(reversed(coord))])-1
 def updateScreen():
     leftGrid, rightGrid, leftTitle, rightTitle = defenseGrid[player2], defenseGrid[player1], "Enemy Fleet", "Your Fleet"
     title = "=== TimoTree Battleship ==="
@@ -187,6 +159,34 @@ def addShip(x, y, direction, length, player):
         defenseGrid[player][x][y] = ship
         shipsGrid[player][-1].append((x, y))
     return 'success'
+screenWidth, screenHeight = get_terminal_size()
+examples = {'ship':("A 0 Down", "A, 0, D", "a, 0 DoWN"), 'attack':("A, 0", "0, a", "a 0")}
+refresh, check = True, 'strict'
+with open("config.json") as configjson:
+    config = json(configjson)
+if not isinstance(config, dict):
+    raise Exception("config.json completely invalid")
+configurables = (("wasteTurns", lambda option: (isinstance(option, bool), option)),
+("gridSize", lambda option: (isinstance(option, int) and int(option) > 0, option)),
+("shipLength", lambda option: (option and min(option) > 0, tuple(option))),
+("shipName", lambda option: (option, tuple([str(i) for i in option]))),
+("colors", lambda option: (isinstance(option, dict),
+dict([(key, '\033[3{}m'.format(('black', 'red', 'green', 'yellow', 'blue', 'purple', 'cyan', 'white').index(value))) for key, value in option.items()]))))
+for configurable, test in configurables:
+    validity, value = test(config[configurable])
+    if not validity:
+        raise Exception(configurable + " invalid.")
+    locals()[configurable] = value
+if max(shipLength) > gridSize or sum(shipLength) > gridSize ** 2:
+    raise Exception("invalid shipLength and gridSize ratios.")
+grid = range(gridSize)
+ships = tuple(zip(shipName, shipLength))
+cell = (colors['empty'] + '~', colors['miss'] + 'O', colors['ship'] + '#', colors['hit'] + 'X')
+defenseGrid = [[[0 for y in grid] for x in grid] for team in range(2)]
+shipsGrid, queueGrid = [[], []], [[], []]
+history = [('War', 'Declared', colors['success'])]
+printLoc = lambda text, x, y: print('\033[{y};{x}H{text}'.format(y=y, x=x, text=text) + reset)
+practicalX = lambda coord: sum([(([chr(i + 65) for i in range(26)].index(val.upper()) + 1) * 26 ** i) for i, val in enumerate(reversed(coord))])-1
 inputMessage = ("game started", colors['success'])
 while len(shipsGrid[player1]) < len(ships):
     updateScreen()
