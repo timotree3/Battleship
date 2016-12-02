@@ -7,46 +7,47 @@ from random import choice
 empty, miss, ship, hit = 0, 1, 2, 3
 player1, player2 = 0, 1
 reset = '\033[0m'
-def updateScreen():
-    leftGrid, rightGrid, leftTitle, rightTitle = defenseGrid[player2], defenseGrid[player1], "Enemy Fleet", "Your Fleet"
-    title = "=== TimoTree Battleship ==="
+def refresh():
+    from os import system, name
     ruler = ' '.join([chr(i + 65) for i in range(gridSize)])
     legend = ('Empty', 'Miss', 'Ship', 'Hit', 'Legend:')
-    histName = 'History'
-    global screenWidth, screenHeight, history, refresh
-    b4Width, b4Height, screenWidth, screenHeight = screenWidth, screenHeight, *get_terminal_size()
-    if screenWidth < 72 or screenHeight < 24 or b4Width != screenWidth or b4Height != screenHeight:
-        if screenWidth < 72 or screenHeight < 24:
-            printLoc("Please enlarge your terminal", 0, 0)
-        refresh = True
-        while screenWidth < 72 or screenHeight < 24 or b4Width != screenWidth or b4Height != screenHeight:
-            b4Width, b4Height, screenWidth, screenHeight = screenWidth, screenHeight, *get_terminal_size()
-            delay(0.1)
-    leftX, legendX, rightX = screenWidth // 4 - (gridSize + 1), int(screenWidth / 2 - len(legend[-1]) / 2) - 1, screenWidth * 3 // 4 - (gridSize + 1)
-    if refresh:
-        from os import name, system
-        print('\033[s\033[2J')
-        system('cls' if name == 'nt' else 'clear')
-        print('\033[u')
-        printLoc(colors['interface'] + title, int(screenWidth / 2 - len(title) / 2), 2)
-        printLoc(colors['interface'] + leftTitle, int(screenWidth / 4 - len(leftTitle) / 2) - 1, 4)
-        printLoc(colors['interface'] + rightTitle, int(screenWidth * 3 / 4 - len(rightTitle) / 2), 4)
-        printLoc(colors['interface'] + ruler, leftX + 2, 6)
-        printLoc(colors['interface'] + ruler, rightX + 2, 6)
-        printLoc(colors['interface'] + legend[-1], legendX + 1, 7)
-        for i in range(len(cell)):
-            printLoc(cell[i] + " - " + legend[i], legendX, i + 8)
+    legendX = int(width / 2 - len(legend[-1]) / 2) - 1
+    leftX, rightX = width // 4 - (gridSize + 1), width * 3 // 4 - (gridSize + 1)
+    print('\033[s\033[2J')
+    system('cls' if name == 'nt' else 'clear')
+    print('\033[u')
+    printLoc(colors['interface'] + "=== TimoTree Battleship ===", int((width-len("=== TimoTree Battleship ===")) / 2), 2)
+    printLoc(colors['interface'] + "Enemy Fleet", int(width / 4 - len("Enemy Fleet") / 2) - 1, 4)
+    printLoc(colors['interface'] + "Your Fleet", int(width * 3 / 4 - len("Your Fleet") / 2), 4)
+    printLoc(colors['interface'] + ruler, leftX + 2, 6)
+    printLoc(colors['interface'] + ruler, rightX + 2, 6)
+    printLoc(colors['interface'] + legend[-1], legendX + 1, 7)
+    for i in range(len(cell)):
+        printLoc(cell[i] + " - " + legend[i], legendX, i + 8)
+def update():
+    leftGrid, rightGrid = defenseGrid[player2], defenseGrid[player1]
+    global width, height, history
+    widthBefore, heightBefore = width, height
+    width, height = get_terminal_size()
+    changed = (width != widthBefore or width < 72
+               or height != heightBefore or height < 24)
+    while width < 72 or height < 24:
+        printLoc("Please enlarge your terminal", 0, 0)
+        delay(0.4)
+        width, height = get_terminal_size()
+    if changed:
+        refresh()
+    leftX, rightX = width // 4 - (gridSize + 1), width * 3 // 4 - (gridSize + 1)
     for y in grid:
         printLoc(colors['interface'] + str(y), leftX, 7+y)
         printLoc(colors['interface'] + str(y), rightX, 7+y)
         for x in grid:
             printLoc(cell[{ship:empty}.get(leftGrid[x][y], leftGrid[x][y])], leftX+(x+1) * 2, 7+y)
             printLoc(cell[rightGrid[x][y]], rightX+(x+1) * 2, 7+y)
-    printLoc('\033[J' + colors['prompt'] + histName, int(screenWidth / 2 - len(histName) / 2), gridSize + 11)
-    for place, action, color, y in zip(*zip(*reversed(history)), range(gridSize + 12, screenHeight)):
+    printLoc('\033[J' + colors['prompt'] + 'History', int((width-len('History')) / 2), gridSize + 11)
+    for place, action, color, y in zip(*zip(*reversed(history)), range(gridSize + 12, height)):
         message = '{}: {}'.format(place, action)
-        printLoc(color + message, int(screenWidth / 2 - len(message) / 2), y)
-    refresh = False
+        printLoc(color + message, int((width-len(message)) / 2), y)
 def getInput(prompt, example=None, queue=None):
     global examples, inputMessage
     printLoc(inputMessage[1] + '{}.'.format(inputMessage[0].capitalize()), 0, gridSize + 8)
@@ -191,9 +192,9 @@ def checkConfig():
     if not isinstance(colors, dict):
         raise ConfigError("colors is not an object",
                           "adding curly braces")
-screenWidth, screenHeight = get_terminal_size()
+width, height = get_terminal_size()
 examples = {'ship':("A 0 Down", "A, 0, D", "a, 0 DoWN"), 'attack':("A, 0", "0, a", "a 0")}
-refresh, check = True, 'strict'
+check = 'strict'
 with open("config.json") as config:
     configured = load(config)
 if not isinstance(configured, dict):
@@ -214,8 +215,9 @@ history = [('War', 'Declared', colors['success'])]
 printLoc = lambda text, x, y: print('\033[{y};{x}H{text}'.format(y=y, x=x, text=text) + reset)
 practicalX = lambda coord: sum([(([chr(i + 65) for i in range(26)].index(val.upper()) + 1) * 26 ** i) for i, val in enumerate(reversed(coord))])-1
 inputMessage = ("game started", colors['success'])
+refresh()
 while len(shipsGrid[player1]) < len(ships):
-    updateScreen()
+    update()
     shipInfo = ships[len(shipsGrid[player1])]
     result = getInput("Place your " + shipInfo[0] + (' ' + cell[ship]) * shipInfo[1], 'ship')
     inputMessage = ("filling board", colors['success'])
@@ -242,7 +244,7 @@ turnCount = 0
 inputMessage = ("you are now attacking", colors['success'])
 history = [("Ships", 'Placed', colors['ship'])]
 while True:
-    updateScreen()
+    update()
     if turnCount % 2 == 0:
         status, player, enemy = 'won', player1, player2
         result = getLocation(getInput("Attack a cell", 'attack', queueGrid[player]))
@@ -266,7 +268,7 @@ while True:
     elif not(turnMessage == 'wasted') or wasteTurns:
         turnCount += 1
         if isinstance(turnMessage, int):
-            updateScreen()
+            update()
             history.append((prettyX + str(attackY), "Sunk '{}'".format(ships[turnMessage][0].title()), colors['ship']))
             if len(list(combine.from_iterable(shipsGrid[enemy]))) == 0:
                 input("\033[{y};0H\033[J\n{color}You {} in {} turns!{}\n".format(status, turnCount // 2, reset, color=colors['interface'], y=gridSize + 7))
