@@ -47,7 +47,7 @@ def updateScreen():
         message = '{}: {}'.format(place, action)
         printLoc(color + message, int(screenWidth / 2 - len(message) / 2), y)
     refresh = False
-def getInput(prompt, example=None, queue=None, hidden=0):
+def getInput(prompt, example=None, queue=None):
     global examples, inputMessage
     printLoc(inputMessage[1] + '{}.'.format(inputMessage[0].capitalize()), 0, gridSize + 8)
     if example in examples:
@@ -217,7 +217,7 @@ inputMessage = ("game started", colors['success'])
 while len(shipsGrid[player1]) < len(ships):
     updateScreen()
     shipInfo = ships[len(shipsGrid[player1])]
-    result = getInput("Place your " + shipInfo[0] + (' ' + cell[ship]) * shipInfo[1], 'ship', hidden=5*shipInfo[1])
+    result = getInput("Place your " + shipInfo[0] + (' ' + cell[ship]) * shipInfo[1], 'ship')
     inputMessage = ("filling board", colors['success'])
     if result == 'dev' and len(shipsGrid[player1]) == 0:
         for i, y in enumerate(range(0, gridSize, 2)):
