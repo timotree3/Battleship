@@ -1,3 +1,4 @@
+#!/bin/env python3
 from time import sleep as delay
 from itertools import chain as combine
 from shutil import get_terminal_size
